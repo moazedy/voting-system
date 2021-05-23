@@ -1,0 +1,11 @@
+service:
+  service_name: "voting-system"
+  http_port: 
+  grpc_port: 
+
+couchbase:
+  addresses: "localhost:8091"
+  username: "admin"
+  password: "adminadmin"
+
+
