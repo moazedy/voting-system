@@ -14,6 +14,7 @@ type Candidate struct {
 	Created_At   time.Time     `json:"created_at"`
 	Deleted      bool          `json:"deleted,omitempty"`
 	Deleted_at   time.Time     `json:"deleted_at,omitempty"`
+	ElectionId   string        `json:"election_id"`
 }
 
 type CandidateType int

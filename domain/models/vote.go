@@ -14,5 +14,6 @@ type Vote struct {
 	VoteValue     bool      `json:"vote_value"`
 	PrivateVoting bool      `json:"private_voting"`
 	Deleted       bool      `json:"deleted,omitempty"`
-	Deleted_at    time.Time `json:"deleted_at,omitempty"`
+	DeletedAt     time.Time `json:"deleted_at,omitempty"`
+	ElectionId    string    `json:"election_id"`
 }
