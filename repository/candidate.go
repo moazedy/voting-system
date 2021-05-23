@@ -27,6 +27,11 @@ type CandidateRepo interface {
 type candidate struct {
 }
 
+// NewCandidateRepo is constractor function for CandidateRepo
+func NewCandidateRepo() CandidateRepo {
+	return new(candidate)
+}
+
 func (c *candidate) CreateCandidate(ctx context.Context, NewCandidate models.Candidate) error {
 	// TODO
 	return nil
