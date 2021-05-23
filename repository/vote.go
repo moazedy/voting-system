@@ -32,7 +32,6 @@ func NewVoteRepo() VoteRepo {
 	return new(vote)
 }
 
-// implementation of Poll function
 func (v *vote) Poll(ctx context.Context, newVote models.Vote) error {
 	// TODO
 	return nil
