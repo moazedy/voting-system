@@ -16,6 +16,8 @@ type ElectionRepo interface {
 	DeleteElection(ctx context.Context, electionId string) error
 	// UpdateElection updates some election using received new election data
 	UpdateElection(ctx context.Context, electionData models.Election) error
+	// GetElectionContributorsCount gets count of given election's contributors
+	GetElectionContributorsCount(ctx context.Context, electionId string) (*int, error)
 }
 
 // election is a struct that represents election entity in repository layer and its the way we can access to repository methods of
@@ -44,4 +46,8 @@ func (e *election) DeleteElection(ctx context.Context, electionId string) error 
 func (e *election) UpdateElection(ctx context.Context, electionData models.Election) error {
 	//TODO
 	return nil
+}
+func (e *election) GetElectionContributorsCount(ctx context.Context, electionId string) (*int, error) {
+	//TODO
+	return nil, nil
 }
