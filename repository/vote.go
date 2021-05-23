@@ -9,7 +9,7 @@ import (
 // interface here
 type VoteRepo interface {
 	// Poll saves new vote in database
-	Poll(ctx context.Context, vote models.Vote) error
+	Poll(ctx context.Context, newVote models.Vote) error
 	// ReadSpecificVoteData is to Reading data of a specific vote, stored in database befor
 	ReadSpecificVoteData(ctx context.Context, voteId string) (*models.Vote, error)
 	// DeleteVote deletes some specific vote using it's id, to not be calculated in results any more
@@ -32,26 +32,38 @@ func NewVoteRepo() VoteRepo {
 	return new(vote)
 }
 
-func (v *vote) Poll(ctx context.Context, vote models.Vote) error {
-
+// implementation of Poll function
+func (v *vote) Poll(ctx context.Context, newVote models.Vote) error {
+	// TODO
+	return nil
 }
 
 func (v *vote) ReadSpecificVoteData(ctx context.Context, voteId string) (*models.Vote, error) {
 
+	// TODO
+	return nil, nil
 }
 
 func (v *vote) DeleteVote(ctx context.Context, voteId string) error {
 
+	// TODO
+	return nil
 }
 
 func (v *vote) AgregateOfCandidatePositiveVotes(ctx context.Context, candidateId string) (*int, error) {
 
+	// TODO
+	return nil, nil
 }
 
 func (v *vote) AgregateOfCandidateNegativeVotes(ctx context.Context, candidateId string) (*int, error) {
 
+	// TODO
+	return nil, nil
 }
 
 func (v *vote) UpdateVoteData(ctx context.Context, newVoteData models.Vote) error {
 
+	// TODO
+	return nil
 }
