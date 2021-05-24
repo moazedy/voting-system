@@ -23,6 +23,7 @@ type CandidateRepo interface {
 	DeleteCandidate(ctx context.Context, candidateId string) error
 	// UpdateCandidate updates candidate data using received data
 	UpdateCandidate(ctx context.Context, candidateData models.Candidate) error
+
 	// IsCandidateExists checks if given candidate id exists in system or not
 	IsCandidateExists(ctx context.Context, candidateId string) (*bool, error)
 }
