@@ -3,7 +3,7 @@ package couchbaseQueries
 import "voting-system/constants"
 
 const (
-	SaveElectionQuery = `INSERT INTO ` + constants.ElectionsBucket + ` (KEY, VALUES) 
+	SaveElectionQuery = `INSERT INTO ` + constants.ElectionsBucket + ` (KEY, VALUE) 
    VALUES ($1, $2)`
 
 	ReadElectionQuery = ` SELECT * FROM ` + constants.ElectionsBucket + ` WHERE 
