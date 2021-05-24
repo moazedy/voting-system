@@ -2,7 +2,11 @@ package repository
 
 import (
 	"context"
+	"log"
 	"voting-system/domain/models"
+	"voting-system/repository/couchbaseQueries"
+
+	"github.com/couchbase/gocb/v2"
 )
 
 // CandidateRepo is interface of candidate  entity in repository layer. other layers of system can interface with it using this
@@ -33,7 +37,13 @@ func NewCandidateRepo() CandidateRepo {
 }
 
 func (c *candidate) CreateCandidate(ctx context.Context, NewCandidate models.Candidate) error {
-	// TODO
+	_, err := DBS.Couch.Query(couchbaseQueries.SaveNewCandidateQuery, &gocb.QueryOptions{
+		PositionalParameters: []interface{}{NewCandidate.Id, NewCandidate},
+	})
+	if err != nil {
+		log.Println(" error in saving new candidate, error :", err.Error())
+		return err
+	}
 	return nil
 }
 
