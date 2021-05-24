@@ -15,3 +15,7 @@ type Contributor struct {
 	ElectionId     string    `json:"election_id"`
 	VotedAt        time.Time `json:"voted_at"`
 }
+
+type ContributorsCount struct {
+	Count int `json:"count"`
+}
