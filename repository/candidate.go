@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"voting-system/domain/models"
 	"voting-system/repository/couchbaseQueries"
@@ -15,9 +16,9 @@ type CandidateRepo interface {
 	// CreateCandidate is for creating new candidate entitiy in voting system
 	CreateCandidate(ctx context.Context, NewCandidate models.Candidate) error
 	// ReadCandidate reads data of requested candidate id, if it exists in db
-	ReadCandidate(ctx context.Context, cadidateId string) (*models.Candidate, error)
+	ReadCandidate(ctx context.Context, candidateId string) (*models.Candidate, error)
 	// GetListOfSomeElectionCandidates gets list of all election candidates
-	GetListOfSomeElectionCandidates(ctx context.Context, electionId, order string, offset, limit int) ([]models.Candidate, error)
+	GetListOfElectionCandidates(ctx context.Context, electionId, order string, offset, limit int) ([]models.Candidate, error)
 	// DeleteCandidate deletes given candidate so that it can not be accessable for voting
 	DeleteCandidate(ctx context.Context, candidateId string) error
 	// UpdateCandidate updates candidate data using received data
@@ -47,22 +48,64 @@ func (c *candidate) CreateCandidate(ctx context.Context, NewCandidate models.Can
 	return nil
 }
 
-func (c *candidate) ReadCandidate(ctx context.Context, cadidateId string) (*models.Candidate, error) {
-	// TODO
-	return nil, nil
+func (c *candidate) ReadCandidate(ctx context.Context, candidateId string) (*models.Candidate, error) {
+	var can models.Candidate
+	result, err := DBS.Couch.Query(couchbaseQueries.ReadCandidateDataQuery, &gocb.QueryOptions{
+		PositionalParameters: []interface{}{candidateId},
+	})
+	if err != nil {
+		log.Println("error in reading candidate data, error :", err.Error())
+		return nil, err
+	}
+	err = result.One(&can)
+	if err != nil {
+		if err == gocb.ErrNoResult {
+			return &can, nil
+		}
+		log.Println("error in reading candidate item, error :", err.Error())
+		return nil, err
+	}
 
+	return &can, nil
 }
 
-func (c *candidate) GetListOfSomeElectionCandidates(ctx context.Context, electionId, order string, offset, limit int) ([]models.Candidate, error) {
-	// TODO
-	return nil, nil
+func (c *candidate) GetListOfElectionCandidates(ctx context.Context, electionId, order string, offset, limit int) ([]models.Candidate, error) {
+	query := fmt.Sprintf(couchbaseQueries.GetElectionCandidatesQuery, order)
+	result, err := DBS.Couch.Query(query, &gocb.QueryOptions{
+		PositionalParameters: []interface{}{electionId, offset, limit},
+	})
+	if err != nil {
+		log.Println("error in query execution, error :", err.Error())
+		return nil, err
+	}
 
+	var candidates []models.Candidate
+	for result.Next() {
+		var candid models.Candidate
+		err := result.Row(&candid)
+		if err != nil {
+			if err == gocb.ErrNoResult {
+				return candidates, nil
+			}
+			log.Println("error in reading candidate item, error :", err.Error())
+			return nil, err
+		}
+
+		candidates = append(candidates, candid)
+	}
+
+	return candidates, nil
 }
 
 func (c *candidate) DeleteCandidate(ctx context.Context, candidateId string) error {
-	// TODO
+	_, err := DBS.Couch.Query(couchbaseQueries.DeleteCandidateQuery, &gocb.QueryOptions{
+		PositionalParameters: []interface{}{candidateId},
+	})
+	if err != nil {
+		log.Println(" error in deleting vote, error :", err.Error())
+		return err
+	}
 	return nil
-
 }
 
 func (c *candidate) UpdateCandidate(ctx context.Context, candidateData models.Candidate) error {
