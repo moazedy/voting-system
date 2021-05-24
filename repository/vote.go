@@ -131,6 +131,7 @@ func (v *vote) AgregateOfCandidateNegativeVotes(ctx context.Context, candidateId
 }
 
 func (v *vote) UpdateVoteData(ctx context.Context, newVoteData models.Vote) error {
+  
 	_, err := DBS.Couch.Query(couchbaseQueries.UpdateVoteQuery, &gocb.QueryOptions{
 		PositionalParameters: []interface{}{
 			newVoteData.CandidateId,

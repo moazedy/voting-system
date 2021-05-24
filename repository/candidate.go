@@ -24,7 +24,7 @@ type CandidateRepo interface {
 	// UpdateCandidate updates candidate data using received data
 	UpdateCandidate(ctx context.Context, candidateData models.Candidate) error
 	// IsCandidateExists checks if given candidate id exists in system or not
-	IsCandidateExists(ctx context.Context, candidateId string) (bool, error)
+	IsCandidateExists(ctx context.Context, candidateId string) (*bool, error)
 }
 
 // candidate is a struct that represents candidate entity in repository layer and its the way we can access to repository methods of
@@ -102,20 +102,52 @@ func (c *candidate) DeleteCandidate(ctx context.Context, candidateId string) err
 		PositionalParameters: []interface{}{candidateId},
 	})
 	if err != nil {
-		log.Println(" error in deleting vote, error :", err.Error())
+		log.Println(" error in deleting candidate, error :", err.Error())
 		return err
 	}
 	return nil
 }
 
 func (c *candidate) UpdateCandidate(ctx context.Context, candidateData models.Candidate) error {
-	// TODO
+	_, err := DBS.Couch.Query(couchbaseQueries.UpdateCandidateQuery, &gocb.QueryOptions{
+		PositionalParameters: []interface{}{
+			candidateData.Name,
+			candidateData.Type,
+			candidateData.Descriptions,
+			candidateData.ElectionId,
+			candidateData.Id,
+		},
+	})
+	if err != nil {
+		log.Println(" error in updating candidate, error :", err.Error())
+		return err
+	}
 	return nil
-
 }
 
-func (c *candidate) IsCandidateExists(ctx context.Context, candidateId string) (bool, error) {
-	// TODO
-	return false, nil
+func (c *candidate) IsCandidateExists(ctx context.Context, candidateId string) (*bool, error) {
+	var exists bool
+	result, err := DBS.Couch.Query(couchbaseQueries.IsCandidateExistsQuery, &gocb.QueryOptions{
+		PositionalParameters: []interface{}{candidateId},
+	})
+	if err != nil {
+		log.Println("error in query execution, error :", err.Error())
+		return nil, err
+	}
+
+	var count models.CandidatesCount
+	err = result.One(&count)
+	if err != nil {
+		if err == gocb.ErrNoResult {
+			return &exists, nil
+		}
+		log.Println("error in reading candidates count, error :", err.Error())
+		return nil, err
+	}
+
+	if count.Count > 0 {
+		exists = true
+	}
+	return &exists, nil
 
 }

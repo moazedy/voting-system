@@ -16,4 +16,13 @@ const (
 
 	DeleteCandidateQuery = ` UPDATE ` + constants.CandidatesBucket + ` SET
        deleted = true, deleted_at = ClOCK_UTC()  WHERE id=$1 `
+
+	UpdateCandidateQuery = ` UPDATE ` + constants.CandidatesBucket + ` SET 
+   name=$1, type=$2, descriptions=$3, election_id=$4  WHERE 
+   id=$5 `
+
+	IsCandidateExistsQuery = ` SELECT count(*) FROM ` + constants.CandidatesBucket + ` WHERE 
+    (deleted = false OR deleted IS MISSING OR deleted IS NULL) AND 
+		id = $1 
+   `
 )
