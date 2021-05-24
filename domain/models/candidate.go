@@ -23,3 +23,7 @@ const (
 	Person CandidateType = iota
 	Problem
 )
+
+type CandidateVotesCount struct {
+	Count int `json:"count"`
+}
