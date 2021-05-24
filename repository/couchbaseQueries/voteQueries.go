@@ -7,7 +7,7 @@ const (
 
 	ReadVoteQuery = ` SELECT * FROM ` + constants.VotesBucket + ` WHERE id=$1 `
 
-	DeleteVoteQuery = ` UPDATE ` + constants.VotesBucket + ` SET deleted = true AND 
+	DeleteVoteQuery = ` UPDATE ` + constants.VotesBucket + ` SET deleted = true,  
    deleted_at= CLOCK_UTC() WHERE id = $1 `
 
 	GetCandidatePositiveVotesQuery = ` SELECT * FROM ` + constants.VotesBucket + ` WHERE 
