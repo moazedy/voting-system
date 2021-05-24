@@ -27,3 +27,7 @@ const (
 type CandidateVotesCount struct {
 	Count int `json:"count"`
 }
+
+type CandidatesCount struct {
+	Count int `json:"count"`
+}
