@@ -10,4 +10,6 @@ const (
 	ElectionCreatorIdCanNotBeEmpty     = "election_creator_id_can_not_be_empty"
 	InvalidCreatorId                   = "invalid_creator_id"
 	InvalidCandidatesCountLimit        = "invalid_candidates_count_limit"
+	InternalServerError                = "internal_server_error"
+	InvalidElectionId                  = "invalid_election_id"
 )
