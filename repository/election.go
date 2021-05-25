@@ -30,7 +30,7 @@ type election struct {
 }
 
 // NewEelectionRepo is constractor fucntion for ElectionRepo
-func NewEelectionRepo() ElectionRepo {
+func NewElectionRepo() ElectionRepo {
 	return new(election)
 }
 
@@ -86,6 +86,7 @@ func (e *election) UpdateElection(ctx context.Context, electionData models.Elect
 			electionData.HasEnded,
 			electionData.Type,
 			electionData.CandidatesCountLimit,
+			electionData.CreatorId,
 			electionData.Id,
 		},
 	})

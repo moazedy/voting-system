@@ -14,8 +14,8 @@ const (
       deleted=true, deleted_at= CLOCK_UTC() WHERE id=$1`
 
 	UpdateElectionQuery = ` UPDATE ` + constants.ElectionsBucket + ` SET 
-       title=$1, start_time=$2, end_time=$3, has_ended=$4 type=$5, candidate_count_limit=$6 
-			  WHERE id=$7 `
+       title=$1, start_time=$2, end_time=$3, has_ended=$4 type=$5, candidate_count_limit=$6,
+       creator_id= $7 WHERE id=$8 `
 
 	GetElectionContributorsCountQuery = ` SELECT count(*) FROM ` + constants.ContributorsBucket +
 		` WHERE (deleted=false OR deleted IS MISSING OR deleted IS NULL ) AND 
