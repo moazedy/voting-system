@@ -1,0 +1,35 @@
+package logic
+
+import (
+	"voting-system/domain/models"
+	"voting-system/repository"
+)
+
+type ElectionLogic interface {
+	CreateNewElection(userId string, electionData models.Election) error
+	Validate() error
+}
+
+type election struct {
+	repo repository.ElectionRepo
+}
+
+func NewElectionLogic() ElectionLogic {
+	return new(election)
+}
+
+func (e *election) CreateNewElection(userId string, electionData models.Election) error {
+	if e.repo == nil {
+		e.repo = repository.NewElectionRepo()
+	}
+
+	electionData.CreatorId = userId
+	electionData.CreationTime = time.Now()
+}
+
+func (e *election) Validate() error {
+
+}
+
+func titleValidate(title string) error {
+}
