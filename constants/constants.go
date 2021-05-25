@@ -7,3 +7,8 @@ const (
 	ContributorsBucket = "contributors"
 	ElectionsBucket    = "elections"
 )
+
+const (
+	MaximomTitleLength     = 50
+	MaximomCandidatesCount = 10
+)
