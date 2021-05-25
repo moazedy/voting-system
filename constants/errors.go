@@ -12,4 +12,5 @@ const (
 	InvalidCandidatesCountLimit        = "invalid_candidates_count_limit"
 	InternalServerError                = "internal_server_error"
 	InvalidElectionId                  = "invalid_election_id"
+	AccessDenied                       = "access_denied"
 )
