@@ -1,7 +1,9 @@
 package models
 
 import (
+	"errors"
 	"time"
+	"voting-system/constants"
 
 	"github.com/google/uuid"
 )
@@ -30,4 +32,57 @@ type CandidateVotesCount struct {
 
 type CandidatesCount struct {
 	Count int `json:"count"`
+}
+
+func (c *Candidate) Validate() error {
+	if err := c.NameValidate(); err != nil {
+		return err
+	}
+
+	if err := c.TypeValidate(); err != nil {
+		return err
+	}
+
+	if err := c.ElectionIdValidate(); err != nil {
+		return err
+	}
+
+	if c.Deleted {
+		return errors.New(constants.DeletedCanNotBeTrueInTheBegining)
+	}
+
+	return nil
+}
+
+func (c *Candidate) NameValidate() error {
+
+	if c.Name == "" {
+		return errors.New(constants.CandidateNameCanNotBeEmpty)
+	}
+
+	if len(c.Name) > constants.MaximomCandidateNameLength {
+		return errors.New(constants.CandidateNameIsLongerThanExpected)
+	}
+	// TODO adding more name validations
+
+	return nil
+}
+
+func (c *Candidate) TypeValidate() error {
+	if !((c.Type == Person) || (c.Type == Problem)) {
+		return errors.New(constants.InvalidCandidateType)
+	}
+	return nil
+}
+
+func (c *Candidate) ElectionIdValidate() error {
+	if c.ElectionId == "" {
+		return errors.New(constants.ElectionIdCanNotBeEmpty)
+	}
+
+	_, err := uuid.Parse(c.ElectionId)
+	if err != nil {
+		return errors.New(constants.InvalidElectionId)
+	}
+	return nil
 }

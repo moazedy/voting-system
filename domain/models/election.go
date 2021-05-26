@@ -107,3 +107,7 @@ func (e *Election) CandidatesCountValidate() error {
 
 	return nil
 }
+
+type ElectionsCount struct {
+	Count int `json:"count"`
+}
