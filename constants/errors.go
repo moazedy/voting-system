@@ -13,4 +13,13 @@ const (
 	InternalServerError                = "internal_server_error"
 	InvalidElectionId                  = "invalid_election_id"
 	AccessDenied                       = "access_denied"
+	CandidateNameCanNotBeEmpty         = "candidate_name_can_not_be_empty"
+	CandidateNameIsLongerThanExpected  = "candidate_name_is_longer_than_expected"
+	InvalidCandidateType               = "invalid_candidate_type"
+	ElectionIdCanNotBeEmpty            = "election_id_can_not_be_empty"
+	DeletedCanNotBeTrueInTheBegining   = "deleted_can_not_be_true_in_the_begining"
+	ElectionDoesNotExist               = "election_does_not_exist"
+	CandidateIdCanNotBeEmpty           = "candidate_id_can_not_be_empty"
+	InvalidCandidateId                 = "invalid_candidate_id"
+	CandidateDoesNotExist              = "candidate_does_not_exist"
 )

@@ -9,6 +9,7 @@ const (
 )
 
 const (
-	MaximomTitleLength     = 50
-	MaximomCandidatesCount = 10
+	MaximomTitleLength         = 50
+	MaximomCandidatesCount     = 10
+	MaximomCandidateNameLength = 50
 )
