@@ -21,7 +21,7 @@ type ElectionRepo interface {
 	// UpdateElection updates some election using received new election data
 	UpdateElection(ctx context.Context, electionData models.Election) error
 	// GetElectionContributorsCount gets count of given election's contributors
-	GetElectionContributorsCount(ctx context.Context, electionId string) (*int, error)
+	GetElectionContributorsCount(ctx context.Context, electionId string) (*models.ContributorsCount, error)
 }
 
 // election is a struct that represents election entity in repository layer and its the way we can access to repository methods of
@@ -97,7 +97,7 @@ func (e *election) UpdateElection(ctx context.Context, electionData models.Elect
 	return nil
 }
 
-func (e *election) GetElectionContributorsCount(ctx context.Context, electionId string) (*int, error) {
+func (e *election) GetElectionContributorsCount(ctx context.Context, electionId string) (*models.ContributorsCount, error) {
 	result, err := DBS.Couch.Query(couchbaseQueries.GetElectionContributorsCountQuery, &gocb.QueryOptions{
 		PositionalParameters: []interface{}{electionId},
 	})
@@ -110,12 +110,12 @@ func (e *election) GetElectionContributorsCount(ctx context.Context, electionId 
 	err = result.One(&count)
 	if err != nil {
 		if err == gocb.ErrNoResult {
-			return &count.Count, nil
+			return &count, nil
 		}
 
 		log.Println("error in reading contributors count, error :", err.Error())
 		return nil, err
 	}
 
-	return &count.Count, nil
+	return &count, nil
 }
