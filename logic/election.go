@@ -7,23 +7,38 @@ import (
 	"voting-system/constants"
 	"voting-system/domain/models"
 	"voting-system/repository"
+
+	"github.com/google/uuid"
 )
 
+// ElectionLogic is election entity interface in logic layer and other layers of program can intract with it
+// through this interface here
 type ElectionLogic interface {
+	// CreateNewElection craates new election using receieved election data
 	CreateNewElection(ctx context.Context, userId string, electionData models.Election) error
+	// ReadElectionData reads data of given election id
 	ReadElectionData(ctx context.Context, electionId string) (*models.Election, error)
+	// DeleteElection deletes the election with received election id
 	DeleteElection(ctx context.Context, electionId, requesterId string, requestedByAdmin bool) error
+	// GetElectionContributorsCount gets number of persons who contributed in given election id
 	GetElectionContributorsCount(ctx context.Context, electionId string) (*models.ContributorsCount, error)
+	// UpdateElection updates data of some election using received electionData
 	UpdateElection(ctx context.Context, electionData models.Election, requesterId string, requestedByAdmin bool) error
+	// CheckElectionExistance checks on election id existance in db
+	CheckElectionExistance(ctx context.Context, electionId string) (*bool, error)
 }
 
+// election struct, is holder of election metods in logic layer
 type election struct {
+	// repo is the way this layer of program can interface with repository layer
 	repo repository.ElectionRepo
 }
 
+// NewElectionLogic is constractor function of ElectionLogic
 func NewElectionLogic() ElectionLogic {
 	newElection := new(election)
 
+	// this part of code follows singlton design pattern
 	if newElection.repo == nil {
 		newElection.repo = repository.NewElectionRepo()
 	}
@@ -31,6 +46,7 @@ func NewElectionLogic() ElectionLogic {
 }
 
 func (e *election) CreateNewElection(ctx context.Context, userId string, electionData models.Election) error {
+	electionData.Id = uuid.New()
 	electionData.CreatorId = userId
 	electionData.CreationTime = time.Now()
 
@@ -47,6 +63,11 @@ func (e *election) CreateNewElection(ctx context.Context, userId string, electio
 
 func (e *election) ReadElectionData(ctx context.Context, electionId string) (*models.Election, error) {
 	if err := electionIdValidate(electionId); err != nil {
+		return nil, err
+	}
+
+	_, err := e.CheckElectionExistance(ctx, electionId)
+	if err != nil {
 		return nil, err
 	}
 
@@ -114,4 +135,22 @@ func (e *election) UpdateElection(ctx context.Context, electionData models.Elect
 	}
 
 	return nil
+}
+
+func (e *election) CheckElectionExistance(ctx context.Context, electionId string) (*bool, error) {
+	if err := electionIdValidate(electionId); err != nil {
+		return nil, err
+	}
+
+	exists, err := e.repo.ElectionExists(ctx, electionId)
+	if err != nil {
+		return nil, errors.New(constants.InternalServerError)
+	}
+
+	if !*exists {
+		return exists, errors.New(constants.ElectionDoesNotExist)
+	}
+
+	return exists, nil
+
 }
