@@ -7,14 +7,14 @@ import (
 	"voting-system/constants"
 	"voting-system/domain/models"
 	"voting-system/repository"
-
-	"github.com/google/uuid"
 )
 
 type ElectionLogic interface {
 	CreateNewElection(ctx context.Context, userId string, electionData models.Election) error
 	ReadElectionData(ctx context.Context, electionId string) (*models.Election, error)
 	DeleteElection(ctx context.Context, electionId, requesterId string, requestedByAdmin bool) error
+	GetElectionContributorsCount(ctx context.Context, electionId string) (*models.ContributorsCount, error)
+	UpdateElection(ctx context.Context, electionData models.Election, requesterId string, requestedByAdmin bool) error
 }
 
 type election struct {
@@ -22,14 +22,15 @@ type election struct {
 }
 
 func NewElectionLogic() ElectionLogic {
-	return new(election)
+	newElection := new(election)
+
+	if newElection.repo == nil {
+		newElection.repo = repository.NewElectionRepo()
+	}
+	return newElection
 }
 
 func (e *election) CreateNewElection(ctx context.Context, userId string, electionData models.Election) error {
-	if e.repo == nil {
-		e.repo = repository.NewElectionRepo()
-	}
-
 	electionData.CreatorId = userId
 	electionData.CreationTime = time.Now()
 
@@ -71,20 +72,45 @@ func (e *election) DeleteElection(ctx context.Context, electionId, requesterId s
 	}
 
 	if err := e.repo.DeleteElection(ctx, electionId); err != nil {
-		return err
+		return errors.New(constants.InternalServerError)
 	}
 
 	return nil
 }
 
-func electionIdValidate(Id string) error {
-	if Id == "" {
-		return errors.New(constants.InvalidElectionId)
+func (e *election) GetElectionContributorsCount(ctx context.Context, electionId string) (*models.ContributorsCount, error) {
+	if err := electionIdValidate(electionId); err != nil {
+		return nil, err
 	}
 
-	_, err := uuid.Parse(Id)
+	count, err := e.repo.GetElectionContributorsCount(ctx, electionId)
 	if err != nil {
-		return errors.New(constants.InvalidElectionId)
+		return nil, errors.New(constants.InternalServerError)
+	}
+
+	return count, nil
+}
+
+func (e *election) UpdateElection(ctx context.Context, electionData models.Election, requesterId string, requestedByAdmin bool) error {
+	theElection, err := e.ReadElectionData(ctx, electionData.Id.String())
+	if err != nil {
+		return err
+	}
+
+	if !requestedByAdmin {
+		// TODO : more access checking
+		if requesterId != theElection.CreatorId {
+			return errors.New(constants.AccessDenied)
+		}
+	}
+
+	if err := electionData.Validate(); err != nil {
+		return err
+	}
+
+	err = e.repo.UpdateElection(ctx, electionData)
+	if err != nil {
+		return errors.New(constants.InternalServerError)
 	}
 
 	return nil
