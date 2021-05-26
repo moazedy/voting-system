@@ -20,4 +20,8 @@ const (
 	GetElectionContributorsCountQuery = ` SELECT count(*) FROM ` + constants.ContributorsBucket +
 		` WHERE (deleted=false OR deleted IS MISSING OR deleted IS NULL ) AND 
          election_id=$1 `
+
+	ElectionExistsQuery = ` SELECT count(*) FROM ` + constants.ElectionsBucket +
+		` WHERE (deleted=false OR deleted IS MISSING OR deleted IS NULL ) AND 
+         id=$1 `
 )
