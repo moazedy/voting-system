@@ -22,4 +22,6 @@ const (
 	CandidateIdCanNotBeEmpty           = "candidate_id_can_not_be_empty"
 	InvalidCandidateId                 = "invalid_candidate_id"
 	CandidateDoesNotExist              = "candidate_does_not_exist"
+	ContributorIdCanNotBeEmpty         = "contributor_id_can_not_be_empty"
+	InvalidContributorId               = "invalid_contributor_id"
 )
