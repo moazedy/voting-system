@@ -32,15 +32,15 @@ type candidate struct {
 
 // NewCandidateLogic is constractor function for CandidateLogic
 func NewCandidateLogic() CandidateLogic {
-	newCandidate := new(candidate)
-	if newCandidate.repo == nil {
-		newCandidate.repo = repository.NewCandidateRepo()
-	}
+	return new(candidate)
 
-	return newCandidate
 }
 
 func (c *candidate) CreateNewCandidate(ctx context.Context, candidateData models.Candidate) error {
+	if c.repo == nil {
+		c.repo = repository.NewCandidateRepo()
+	}
+
 	if err := candidateData.Validate(); err != nil {
 		return err
 	}
@@ -64,6 +64,10 @@ func (c *candidate) CreateNewCandidate(ctx context.Context, candidateData models
 }
 
 func (c *candidate) ReadCandidateData(ctx context.Context, candidateId, requesterId string, requestedByAdmin bool) (*models.Candidate, error) {
+	if c.repo == nil {
+		c.repo = repository.NewCandidateRepo()
+	}
+
 	_, err := c.CandidateExistanceCheck(ctx, candidateId)
 	if err != nil {
 		return nil, err
@@ -84,6 +88,10 @@ func (c *candidate) ReadCandidateData(ctx context.Context, candidateId, requeste
 }
 
 func (c *candidate) DeleteCandidate(ctx context.Context, candidateId, requesterId string, requestedByAdmin bool) error {
+	if c.repo == nil {
+		c.repo = repository.NewCandidateRepo()
+	}
+
 	_, err := c.ReadCandidateData(ctx, candidateId, requesterId, false)
 	if err != nil {
 		return err
@@ -98,6 +106,10 @@ func (c *candidate) DeleteCandidate(ctx context.Context, candidateId, requesterI
 }
 
 func (c *candidate) CandidateExistanceCheck(ctx context.Context, candidateId string) (*bool, error) {
+	if c.repo == nil {
+		c.repo = repository.NewCandidateRepo()
+	}
+
 	if err := candidateIdValidate(candidateId); err != nil {
 		return nil, err
 	}
@@ -115,6 +127,9 @@ func (c *candidate) CandidateExistanceCheck(ctx context.Context, candidateId str
 }
 
 func (c *candidate) GetListOfElectionCandidates(ctx context.Context, electionId, order string, offset, limit int) ([]models.Candidate, error) {
+	if c.repo == nil {
+		c.repo = repository.NewCandidateRepo()
+	}
 
 	contributors, err := c.repo.GetListOfElectionCandidates(ctx, electionId, order, offset, limit)
 	if err != nil {

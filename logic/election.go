@@ -36,16 +36,15 @@ type election struct {
 
 // NewElectionLogic is constractor function of ElectionLogic
 func NewElectionLogic() ElectionLogic {
-	newElection := new(election)
-
-	// this part of code follows singlton design pattern
-	if newElection.repo == nil {
-		newElection.repo = repository.NewElectionRepo()
-	}
-	return newElection
+	return new(election)
 }
 
 func (e *election) CreateNewElection(ctx context.Context, userId string, electionData models.Election) error {
+	// this part of code follows singlton design pattern
+	if e.repo == nil {
+		e.repo = repository.NewElectionRepo()
+	}
+
 	electionData.Id = uuid.New()
 	electionData.CreatorId = userId
 	electionData.CreationTime = time.Now()
@@ -62,6 +61,11 @@ func (e *election) CreateNewElection(ctx context.Context, userId string, electio
 }
 
 func (e *election) ReadElectionData(ctx context.Context, electionId string) (*models.Election, error) {
+	// this part of code follows singlton design pattern
+	if e.repo == nil {
+		e.repo = repository.NewElectionRepo()
+	}
+
 	if err := electionIdValidate(electionId); err != nil {
 		return nil, err
 	}
@@ -80,6 +84,11 @@ func (e *election) ReadElectionData(ctx context.Context, electionId string) (*mo
 }
 
 func (e *election) DeleteElection(ctx context.Context, electionId, requesterId string, requestedByAdmin bool) error {
+	// this part of code follows singlton design pattern
+	if e.repo == nil {
+		e.repo = repository.NewElectionRepo()
+	}
+
 	theElection, err := e.ReadElectionData(ctx, electionId)
 	if err != nil {
 		return err
@@ -100,6 +109,11 @@ func (e *election) DeleteElection(ctx context.Context, electionId, requesterId s
 }
 
 func (e *election) GetElectionContributorsCount(ctx context.Context, electionId string) (*models.ContributorsCount, error) {
+	// this part of code follows singlton design pattern
+	if e.repo == nil {
+		e.repo = repository.NewElectionRepo()
+	}
+
 	if err := electionIdValidate(electionId); err != nil {
 		return nil, err
 	}
@@ -113,6 +127,11 @@ func (e *election) GetElectionContributorsCount(ctx context.Context, electionId 
 }
 
 func (e *election) UpdateElection(ctx context.Context, electionData models.Election, requesterId string, requestedByAdmin bool) error {
+	// this part of code follows singlton design pattern
+	if e.repo == nil {
+		e.repo = repository.NewElectionRepo()
+	}
+
 	theElection, err := e.ReadElectionData(ctx, electionData.Id.String())
 	if err != nil {
 		return err
@@ -138,6 +157,11 @@ func (e *election) UpdateElection(ctx context.Context, electionData models.Elect
 }
 
 func (e *election) CheckElectionExistance(ctx context.Context, electionId string) (*bool, error) {
+	// this part of code follows singlton design pattern
+	if e.repo == nil {
+		e.repo = repository.NewElectionRepo()
+	}
+
 	if err := electionIdValidate(electionId); err != nil {
 		return nil, err
 	}
