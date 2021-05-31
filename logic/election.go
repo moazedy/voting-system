@@ -26,6 +26,8 @@ type ElectionLogic interface {
 	UpdateElection(ctx context.Context, electionData models.Election, requesterId string, requestedByAdmin bool) error
 	// CheckElectionExistance checks on election id existance in db
 	CheckElectionExistance(ctx context.Context, electionId string) (*bool, error)
+	// GetListOfRelatedUsers gets list of user Ids being added to the election as related users
+	GetListOfRelatedUsers(ctx context.Context, electionId, requesterId string, requestedByAdmin bool) (*models.RelatedUsers, error)
 }
 
 // election struct, is holder of election metods in logic layer
@@ -177,4 +179,29 @@ func (e *election) CheckElectionExistance(ctx context.Context, electionId string
 
 	return exists, nil
 
+}
+
+func (e *election) GetListOfRelatedUsers(ctx context.Context, electionId, requesterId string, requestedByAdmin bool) (*models.RelatedUsers, error) {
+	// this part of code follows singlton design pattern
+	if e.repo == nil {
+		e.repo = repository.NewElectionRepo()
+	}
+	theElection, err := e.ReadElectionData(ctx, electionId)
+	if err != nil {
+		return nil, err
+	}
+
+	if !requestedByAdmin {
+		// TODO : more access checking
+		if requesterId != theElection.CreatorId {
+			return nil, errors.New(constants.AccessDenied)
+		}
+	}
+
+	users, err := e.repo.GetListOfRelatedUsers(ctx, electionId)
+	if err != nil {
+		return nil, errors.New(constants.InternalServerError)
+	}
+
+	return users, nil
 }
