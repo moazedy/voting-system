@@ -9,25 +9,51 @@ import (
 )
 
 type Election struct {
-	Id                   uuid.UUID    `json:"id"`
-	Title                string       `json:"title"`
-	CreationTime         time.Time    `json:"creation_time"`
-	StartTime            time.Time    `json:"start_time"`
-	EndTime              time.Time    `json:"end_time"`
-	HasEnded             bool         `json:"has_ended"`
-	Type                 ElectionType `json"type"`
-	CandidatesCountLimit int          `json:"candidate_count_limit"`
-	CreatorId            string       `json:"creator_id"`
+	// Id is election unique id that every election could be known by it
+	Id uuid.UUID `json:"id"`
+	// Title is the title that creator chose for election
+	Title string `json:"title"`
+	// CreationTime is time of the moment wich election created in it
+	CreationTime time.Time `json:"creation_time"`
+	// StartTime is the time that creator sets as time of election begining
+	StartTime time.Time `json:"start_time"`
+	// EndTime is the time that creator sets as election termination
+	EndTime time.Time `json:"end_time"`
+	// HasEnded determines that the election has ended or not
+	HasEnded bool `json:"has_ended"`
+	// Type specifies type of the election
+	Type ElectionType `json"type"`
+	// CandidatesCountLimit determines the maximom of candidates in the election
+	CandidatesCountLimit int `json:"candidate_count_limit"`
+	// CreatorId is id of the user who created the election
+	CreatorId string `json:"creator_id"`
+	// CountOfLimitedCandidates is a field that be evaluate in LimitedCount types of elections, this map is
+	// created from candidate id as string key and maximom picking time of it as int value of the key
+	CountOfLimitedCandidates map[string]int `json:"count_of_limited_candidates,omitempty"`
+	// RelatedPersons holds list of persons related to the election
+	RelatedPersons []string `json:"related_persons"`
+	// RelatedCategories holds list of categories related to the election
+	RelatedCategories []string `json:"related_categories,omitempty"`
 }
 
 type ElectionType int
 
 const (
+	// PublicVotersData : in this type of election, votes data is public and it is clear that who votes to who/what
 	PublicVotersData ElectionType = iota
+	// PrivateVotesData : in this type of election, votes data is private and results only accessable
 	PrivateVotersData
+	// SimpleYesOrNo : is a simple questioning about a promblem by vote values as yes or no
 	SimpleYesOrNo
+	// PrivateLimitedCout : this type of election being used when picking of limited count objects or problems is
+	// considerd. it means that every introduced candidate has its own limited count to be picked, like a basket of
+	// different.
+	PrivateLimitedCount
+	// PublicLimitedCount : it is exactly like PrivateLimitedCount but in this type, voters data is public
+	PublicLimitedCount
 )
 
+// Validate validates data inside of the election that it's being called on
 func (e *Election) Validate() error {
 	if err := e.TitleValidate(); err != nil {
 		return err
