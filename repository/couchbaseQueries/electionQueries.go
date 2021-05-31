@@ -33,4 +33,14 @@ const (
           (deleted= false OR deleted IS MISSING OR deleted IS NULL) AND 
             id = $1 
          `
+
+	GetUserRelatedElectionsQuery = ` SELECT e.id FROM ` + constants.ElectionsBucket + ` AS e 
+          UNNEST e.related_persons AS persons
+          WHERE (deleted= false OR deleted IS MISSING OR deleted IS NULL) AND
+          persons.id = $1 `
+
+	GetCategoryRelatedElectionsQuery = ` SELECT e.id FROM ` + constants.ElectionsBucket + ` AS e 
+          UNNEST e.related_categories AS cats
+          WHERE (deleted= false OR deleted IS MISSING OR deleted IS NULL) AND
+          cats.id = $1 `
 )

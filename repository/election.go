@@ -25,9 +25,13 @@ type ElectionRepo interface {
 	// ElectionExists checks on given election id existance
 	ElectionExists(ctx context.Context, electionId string) (*bool, error)
 	// GetListOfRelatedUsers gets list Ids of users being added as related users to the election
-	GetListOfRelatedUsers(ctx context.Context, electionId string) (*models.RelatedUsers, error)
+	GetListOfRelatedUsers(ctx context.Context, electionId string) ([]models.RelatedPerson, error)
 	// GetListOfRelatedCategories gets list of category Ids being added to the election as related categories
-	GetListOfRelatedCategories(ctxx context.Context, electionId string) (*models.RelatedCategories, error)
+	GetListOfRelatedCategories(ctx context.Context, electionId string) ([]models.RelatedCategory, error)
+	// GetUserRelatedElections gets list of election Ids that are related to given userId
+	GetUserRelatedElections(ctx context.Context, userId string) (*models.Elections, error)
+	// GetCategoryRelatedElections gets list of elction Ids that are related to given category id
+	GetCategoryRelatedElections(ctx context.Context, categoryId string) (*models.Elections, error)
 }
 
 // election is a struct that represents election entity in repository layer and its the way we can access to repository methods of
@@ -155,7 +159,7 @@ func (e *election) ElectionExists(ctx context.Context, electionId string) (*bool
 
 }
 
-func (e *election) GetListOfRelatedUsers(ctx context.Context, electionId string) (*models.RelatedUsers, error) {
+func (e *election) GetListOfRelatedUsers(ctx context.Context, electionId string) ([]models.RelatedPerson, error) {
 	result, err := DBS.Couch.Query(couchbaseQueries.GetListOfRelatedUsersQuery, &gocb.QueryOptions{
 		PositionalParameters: []interface{}{electionId},
 	})
@@ -164,20 +168,25 @@ func (e *election) GetListOfRelatedUsers(ctx context.Context, electionId string)
 		return nil, err
 	}
 
-	var users models.RelatedUsers
-	err = result.One(&users)
-	if err != nil {
-		if err == gocb.ErrNoResult {
-			return &users, nil
+	var users []models.RelatedPerson
+	for result.Next() {
+		var user models.RelatedPerson
+		err := result.Row(&user)
+		if err != nil {
+			if err == gocb.ErrNoResult {
+				return users, nil
+			}
+			log.Println("error in reading election related users, error :", err.Error())
+			return nil, err
 		}
-		log.Println("error in reading election related users, error :", err.Error())
-		return nil, err
+
+		users = append(users, user)
 	}
 
-	return &users, nil
+	return users, nil
 }
 
-func (e *election) GetListOfRelatedCategories(ctxx context.Context, electionId string) (*models.RelatedCategories, error) {
+func (e *election) GetListOfRelatedCategories(ctx context.Context, electionId string) ([]models.RelatedCategory, error) {
 	result, err := DBS.Couch.Query(couchbaseQueries.GetListOfRelatedCategoriesQuery, &gocb.QueryOptions{
 		PositionalParameters: []interface{}{electionId},
 	})
@@ -186,15 +195,74 @@ func (e *election) GetListOfRelatedCategories(ctxx context.Context, electionId s
 		return nil, err
 	}
 
-	var cats models.RelatedCategories
-	err = result.One(&cats)
-	if err != nil {
-		if err == gocb.ErrNoResult {
-			return &cats, nil
+	var cats []models.RelatedCategory
+	for result.Next() {
+		var cat models.RelatedCategory
+		err := result.Row(&cat)
+		if err != nil {
+			if err == gocb.ErrNoResult {
+				return cats, nil
+			}
+			log.Println("error in reading election related categories, error :", err.Error())
+			return nil, err
 		}
-		log.Println("error in reading election related categories, error :", err.Error())
+		cats = append(cats, cat)
+	}
+
+	return cats, nil
+}
+
+func (e *election) GetUserRelatedElections(ctx context.Context, userId string) (*models.Elections, error) {
+	result, err := DBS.Couch.Query(couchbaseQueries.GetUserRelatedElectionsQuery, &gocb.QueryOptions{
+		PositionalParameters: []interface{}{userId},
+	})
+	if err != nil {
+		log.Println("error in query execution, error :", err.Error())
 		return nil, err
 	}
 
-	return &cats, nil
+	var elections models.Elections
+	for result.Next() {
+		var election models.ElectionId
+		err := result.Row(&election)
+		if err != nil {
+			if err == gocb.ErrNoResult {
+				return &elections, nil
+			}
+			log.Println("error in reading election id item, error : ", err.Error())
+			return nil, err
+		}
+
+		elections.Elections = append(elections.Elections, election)
+	}
+
+	return &elections, nil
+}
+
+func (e election) GetCategoryRelatedElections(ctx context.Context, categoryId string) (*models.Elections, error) {
+	result, err := DBS.Couch.Query(couchbaseQueries.GetCategoryRelatedElectionsQuery, &gocb.QueryOptions{
+		PositionalParameters: []interface{}{categoryId},
+	})
+	if err != nil {
+		log.Println("error in query execution, error :", err.Error())
+		return nil, err
+	}
+
+	var elections models.Elections
+	for result.Next() {
+		var election models.ElectionId
+		err := result.Row(&election)
+		if err != nil {
+			if err == gocb.ErrNoResult {
+				return &elections, nil
+			}
+			log.Println("error in reading election id item, error : ", err.Error())
+			return nil, err
+		}
+
+		elections.Elections = append(elections.Elections, election)
+	}
+
+	return &elections, nil
+
 }

@@ -27,9 +27,13 @@ type ElectionLogic interface {
 	// CheckElectionExistance checks on election id existance in db
 	CheckElectionExistance(ctx context.Context, electionId string) (*bool, error)
 	// GetListOfRelatedUsers gets list of user Ids being added to the election as related users
-	GetListOfRelatedUsers(ctx context.Context, electionId, requesterId string, requestedByAdmin bool) (*models.RelatedUsers, error)
+	GetListOfRelatedUsers(ctx context.Context, electionId, requesterId string, requestedByAdmin bool) ([]models.RelatedPerson, error)
 	// GetListOfRelatedCategories gets list of category Ids wich being added to the election as related categories
-	GetListOfRelatedCategories(ctx context.Context, electionId, requesterId string, requestedByAdmin bool) (*models.RelatedCategories, error)
+	GetListOfRelatedCategories(ctx context.Context, electionId, requesterId string, requestedByAdmin bool) ([]models.RelatedCategory, error)
+	// GetUserRelatedElections gets list of election Ids wich are related to a specific user
+	GetUserRelatedElections(ctx context.Context, userId, requesterId string, requestedByAdmin bool) (*models.Elections, error)
+	// GetCategoryRelatedElections gets list of elections that are related to given categoryId
+	GetCategoryRelatedElections(ctx context.Context, categoryId, requesterId string, requestedByAdmin bool) (*models.Elections, error)
 }
 
 // election struct, is holder of election metods in logic layer
@@ -183,7 +187,7 @@ func (e *election) CheckElectionExistance(ctx context.Context, electionId string
 
 }
 
-func (e *election) GetListOfRelatedUsers(ctx context.Context, electionId, requesterId string, requestedByAdmin bool) (*models.RelatedUsers, error) {
+func (e *election) GetListOfRelatedUsers(ctx context.Context, electionId, requesterId string, requestedByAdmin bool) ([]models.RelatedPerson, error) {
 	// this part of code follows singlton design pattern
 	if e.repo == nil {
 		e.repo = repository.NewElectionRepo()
@@ -208,7 +212,7 @@ func (e *election) GetListOfRelatedUsers(ctx context.Context, electionId, reques
 	return users, nil
 }
 
-func (e *election) GetListOfRelatedCategories(ctx context.Context, electionId, requesterId string, requestedByAdmin bool) (*models.RelatedCategories, error) {
+func (e *election) GetListOfRelatedCategories(ctx context.Context, electionId, requesterId string, requestedByAdmin bool) ([]models.RelatedCategory, error) {
 	// this part of code follows singlton design pattern
 	if e.repo == nil {
 		e.repo = repository.NewElectionRepo()
@@ -231,4 +235,43 @@ func (e *election) GetListOfRelatedCategories(ctx context.Context, electionId, r
 	}
 
 	return cats, nil
+}
+
+func (e *election) GetUserRelatedElections(ctx context.Context, userId, requesterId string, requestedByAdmin bool) (*models.Elections, error) {
+	// this part of code follows singlton design pattern
+	if e.repo == nil {
+		e.repo = repository.NewElectionRepo()
+	}
+
+	if !requestedByAdmin {
+		// TODO more access checks ...
+		if userId != requesterId {
+			return nil, errors.New(constants.AccessDenied)
+		}
+	}
+
+	elections, err := e.repo.GetUserRelatedElections(ctx, userId)
+	if err != nil {
+		return nil, errors.New(constants.InternalServerError)
+	}
+
+	return elections, nil
+}
+
+func (e election) GetCategoryRelatedElections(ctx context.Context, categoryId, requesterId string, requestedByAdmin bool) (*models.Elections, error) {
+	// this part of code follows singlton design pattern
+	if e.repo == nil {
+		e.repo = repository.NewElectionRepo()
+	}
+
+	if !requestedByAdmin {
+		// TODO : checking requester accesses on category
+	}
+
+	elections, err := e.repo.GetCategoryRelatedElections(ctx, categoryId)
+	if err != nil {
+		return nil, errors.New(constants.InternalServerError)
+	}
+
+	return elections, nil
 }

@@ -31,9 +31,9 @@ type Election struct {
 	// created from candidate id as string key and maximom picking time of it as int value of the key
 	CountOfLimitedCandidates map[string]int `json:"count_of_limited_candidates,omitempty"`
 	// RelatedPersons holds list of persons related to the election
-	RelatedPersons []string `json:"related_persons"`
+	RelatedPersons []RelatedPerson `json:"related_persons"`
 	// RelatedCategories holds list of categories related to the election
-	RelatedCategories []string `json:"related_categories,omitempty"`
+	RelatedCategories []RelatedCategory `json:"related_categories,omitempty"`
 }
 
 type ElectionType int
@@ -139,10 +139,28 @@ type ElectionsCount struct {
 	Count int `json:"count"`
 }
 
-type RelatedUsers struct {
+/*type RelatedUsers struct {
 	Users []string `json:"users"`
+}*/
+
+/*type RelatedCategories struct {
+	Categories []string `json:"categories"`
+}*/
+
+type ElectionId struct {
+	ElectionId string `json:"election_id"`
 }
 
-type RelatedCategories struct {
-	Categories []string `json:"categories"`
+type Elections struct {
+	Elections []ElectionId `json:"elections"`
+}
+
+type RelatedPerson struct {
+	Id       string `json:"id"`
+	Username string `json:"username,omitempty"`
+}
+
+type RelatedCategory struct {
+	Id  string `json:"id"`
+	Tag string `json:"tag"`
 }
