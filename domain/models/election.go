@@ -91,7 +91,8 @@ func (e *Election) TitleValidate() error {
 }
 
 func (e *Election) TypeValidate() error {
-	if !((e.Type == PublicVotersData) || (e.Type == PrivateVotersData) || (e.Type == SimpleYesOrNo)) {
+	if !((e.Type == PublicVotersData) || (e.Type == PrivateVotersData) || (e.Type == SimpleYesOrNo) ||
+		(e.Type == PrivateLimitedCount) || (e.Type == PublicLimitedCount)) {
 		return errors.New(constants.InvalidElectionType)
 	}
 	return nil
