@@ -24,6 +24,10 @@ type ElectionRepo interface {
 	GetElectionContributorsCount(ctx context.Context, electionId string) (*models.ContributorsCount, error)
 	// ElectionExists checks on given election id existance
 	ElectionExists(ctx context.Context, electionId string) (*bool, error)
+	// GetListOfRelatedUsers gets list Ids of users being added as related users to the election
+	GetListOfRelatedUsers(ctx context.Context, electionId string) (*models.RelatedUsers, error)
+	// GetListOfRelatedCategories gets list of category Ids being added to the election as related categories
+	GetListOfRelatedCategories(ctxx context.Context, electionId string) (*models.RelatedCategories, error)
 }
 
 // election is a struct that represents election entity in repository layer and its the way we can access to repository methods of
@@ -149,4 +153,48 @@ func (e *election) ElectionExists(ctx context.Context, electionId string) (*bool
 
 	return &exists, nil
 
+}
+
+func (e *election) GetListOfRelatedUsers(ctx context.Context, electionId string) (*models.RelatedUsers, error) {
+	result, err := DBS.Couch.Query(couchbaseQueries.GetListOfRelatedUsersQuery, &gocb.QueryOptions{
+		PositionalParameters: []interface{}{electionId},
+	})
+	if err != nil {
+		log.Println("error in query execution, error :", err.Error())
+		return nil, err
+	}
+
+	var users models.RelatedUsers
+	err = result.One(&users)
+	if err != nil {
+		if err == gocb.ErrNoResult {
+			return &users, nil
+		}
+		log.Println("error in reading election related users, error :", err.Error())
+		return nil, err
+	}
+
+	return &users, nil
+}
+
+func (e *election) GetListOfRelatedCategories(ctxx context.Context, electionId string) (*models.RelatedCategories, error) {
+	result, err := DBS.Couch.Query(couchbaseQueries.GetListOfRelatedCategoriesQuery, &gocb.QueryOptions{
+		PositionalParameters: []interface{}{electionId},
+	})
+	if err != nil {
+		log.Println("error in query execution, error :", err.Error())
+		return nil, err
+	}
+
+	var cats models.RelatedCategories
+	err = result.One(&cats)
+	if err != nil {
+		if err == gocb.ErrNoResult {
+			return &cats, nil
+		}
+		log.Println("error in reading election related categories, error :", err.Error())
+		return nil, err
+	}
+
+	return &cats, nil
 }

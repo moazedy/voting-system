@@ -138,3 +138,11 @@ func (e *Election) CandidatesCountValidate() error {
 type ElectionsCount struct {
 	Count int `json:"count"`
 }
+
+type RelatedUsers struct {
+	Users []string `json:"users"`
+}
+
+type RelatedCategories struct {
+	Categories []string `json:"categories"`
+}

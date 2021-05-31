@@ -24,4 +24,13 @@ const (
 	ElectionExistsQuery = ` SELECT count(*) FROM ` + constants.ElectionsBucket +
 		` WHERE (deleted=false OR deleted IS MISSING OR deleted IS NULL ) AND 
          id=$1 `
+
+	GetListOfRelatedUsersQuery = ` SELECT related_users FROM ` + constants.ElectionsBucket + ` WHERE 
+           (deleted= false OR deleted IS MISSING OR deleted IS NULL) AND 
+            id = $1 
+         `
+	GetListOfRelatedCategoriesQuery = ` SELECT related_categories FROM ` + constants.ElectionsBucket + ` WHERE 
+          (deleted= false OR deleted IS MISSING OR deleted IS NULL) AND 
+            id = $1 
+         `
 )
