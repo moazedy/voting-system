@@ -78,3 +78,11 @@ func (v *Vote) ElectionIdValidate() error {
 	}
 	return nil
 }
+
+type VoteId struct {
+	VoteId string `json:"vote_id"`
+}
+
+type VoteCount struct {
+	Count int `json:"count"`
+}
