@@ -19,6 +19,8 @@ type VoteLogic interface {
 	ReadVoteData(ctx context.Context, voteId, requesterId string, requestedByAdmin bool) (*models.Vote, error)
 	// DeleteVote deletes requested voteId and returns an error if any problem happens during the operation
 	DeleteVote(ctx context.Context, voteId, requesterId string, requestedByAdmin bool) error
+	// AgregateOfCandidatePositiveVotes is to reading count of some candidate's positive votes
+	AgregateOfCandidatePositiveVotes(ctx context.Context, candidateId, requesterId string, requestedByAdmin bool) (*models.CandidateVotesCount, error)
 }
 
 // vote is a struct that is way to access vote methods in logic layer
@@ -126,4 +128,26 @@ func (v vote) DeleteVote(ctx context.Context, voteId, requesterId string, reques
 	}
 
 	return nil
+}
+
+func (v vote) AgregateOfCandidatePositiveVotes(ctx context.Context, candidateId, requesterId string, requestedByAdmin bool) (*models.CandidateVotesCount, error) {
+	// singlton design pattern ...
+	if v.repo == nil {
+		v.repo = repository.NewVoteRepo()
+	}
+	if v.candidateLogic == nil {
+		v.candidateLogic = NewCandidateLogic()
+	}
+
+	_, err := v.candidateLogic.ReadCandidateData(ctx, candidateId, requesterId, requestedByAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	votes, err := v.repo.AgregateOfCandidatePositiveVotes(ctx, candidateId)
+	if err != nil {
+		return nil, errors.New(constants.InternalServerError)
+	}
+
+	return votes, nil
 }
