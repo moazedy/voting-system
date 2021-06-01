@@ -17,6 +17,8 @@ type VoteLogic interface {
 	SaveNewVote(ctx context.Context, voteData models.Vote, requesterId string) (*models.VoteId, error)
 	// ReadVoteData returns data of given voteId
 	ReadVoteData(ctx context.Context, voteId, requesterId string, requestedByAdmin bool) (*models.Vote, error)
+	// DeleteVote deletes requested voteId and returns an error if any problem happens during the operation
+	DeleteVote(ctx context.Context, voteId, requesterId string, requestedByAdmin bool) error
 }
 
 // vote is a struct that is way to access vote methods in logic layer
@@ -97,4 +99,31 @@ func (v vote) ReadVoteData(ctx context.Context, voteId, requesterId string, requ
 	}
 
 	return theVote, nil
+}
+
+func (v vote) DeleteVote(ctx context.Context, voteId, requesterId string, requestedByAdmin bool) error {
+	// singlton design pattern ...
+	if v.repo == nil {
+		v.repo = repository.NewVoteRepo()
+	}
+
+	// reading the vote
+	theVote, err := v.repo.ReadSpecificVoteData(ctx, voteId)
+	if err != nil {
+		return errors.New(constants.InternalServerError)
+	}
+
+	// access checking
+	if !requestedByAdmin {
+		if requesterId != theVote.ContributorId {
+			return errors.New(constants.AccessDenied)
+		}
+	}
+
+	err = v.repo.DeleteVote(ctx, voteId)
+	if err != nil {
+		return errors.New(constants.InternalServerError)
+	}
+
+	return nil
 }
