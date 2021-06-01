@@ -20,9 +20,9 @@ type VoteRepo interface {
 	// DeleteVote deletes some specific vote using it's id, to not be calculated in results any more
 	DeleteVote(ctx context.Context, voteId string) error
 	// AgregateOfCandidatePositiveVotes is to reading count of some candidate's positive votes
-	AgregateOfCandidatePositiveVotes(ctx context.Context, candidateId string) (*int, error)
+	AgregateOfCandidatePositiveVotes(ctx context.Context, candidateId string) (*models.CandidateVotesCount, error)
 	// AgregateOfCandidateNegativeVotes is to reading count of some candidate's negative votes
-	AgregateOfCandidateNegativeVotes(ctx context.Context, candidateId string) (*int, error)
+	AgregateOfCandidateNegativeVotes(ctx context.Context, candidateId string) (*models.CandidateVotesCount, error)
 	// UpdateVoteDat aupdates some vote's data
 	UpdateVoteData(ctx context.Context, newVoteData models.Vote) error
 	// GetCandidateVotes gets all of given candidate votes in system
@@ -90,7 +90,7 @@ func (v *vote) DeleteVote(ctx context.Context, voteId string) error {
 	return nil
 }
 
-func (v *vote) AgregateOfCandidatePositiveVotes(ctx context.Context, candidateId string) (*int, error) {
+func (v *vote) AgregateOfCandidatePositiveVotes(ctx context.Context, candidateId string) (*models.CandidateVotesCount, error) {
 	result, err := DBS.Couch.Query(couchbaseQueries.GetCandidatePositiveVotesCount, &gocb.QueryOptions{
 		PositionalParameters: []interface{}{candidateId},
 	})
@@ -103,16 +103,16 @@ func (v *vote) AgregateOfCandidatePositiveVotes(ctx context.Context, candidateId
 	err = result.One(&count)
 	if err != nil {
 		if err == gocb.ErrNoResult {
-			return &count.Count, nil
+			return &count, nil
 		}
 		log.Println("error in reading votes count, error :", err.Error())
 		return nil, err
 	}
 
-	return &count.Count, nil
+	return &count, nil
 }
 
-func (v *vote) AgregateOfCandidateNegativeVotes(ctx context.Context, candidateId string) (*int, error) {
+func (v *vote) AgregateOfCandidateNegativeVotes(ctx context.Context, candidateId string) (*models.CandidateVotesCount, error) {
 	result, err := DBS.Couch.Query(couchbaseQueries.GetCandidateNegativeVotesCount, &gocb.QueryOptions{
 		PositionalParameters: []interface{}{candidateId},
 	})
@@ -125,13 +125,13 @@ func (v *vote) AgregateOfCandidateNegativeVotes(ctx context.Context, candidateId
 	err = result.One(&count)
 	if err != nil {
 		if err == gocb.ErrNoResult {
-			return &count.Count, nil
+			return &count, nil
 		}
 		log.Println("error in reading votes count, error :", err.Error())
 		return nil, err
 	}
 
-	return &count.Count, nil
+	return &count, nil
 }
 
 func (v *vote) UpdateVoteData(ctx context.Context, newVoteData models.Vote) error {
