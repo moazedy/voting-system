@@ -13,8 +13,8 @@ import (
 // VoteRepo is interface of vote entity in repository layer. other layers of system can interface with it using this
 // interface here
 type VoteRepo interface {
-	// SaveVote saves new vote in database
-	SaveVote(ctx context.Context, newVote models.Vote) error
+	// SaveVote saves new vote in database and returns the id
+	SaveVote(ctx context.Context, newVote models.Vote) (*models.VoteId, error)
 	// ReadSpecificVoteData is to Reading data of a specific vote, stored in database befor
 	ReadSpecificVoteData(ctx context.Context, voteId string) (*models.Vote, error)
 	// DeleteVote deletes some specific vote using it's id, to not be calculated in results any more
@@ -31,6 +31,8 @@ type VoteRepo interface {
 	GetCandidatePositiveVotes(ctx context.Context, candidateId, order string, offset, limit int) ([]models.Vote, error)
 	// GetCandidateNegativeVotes gets list of all negative votes of candidate
 	GetCandidateNegativeVotes(ctx context.Context, candidateId, order string, offset, limit int) ([]models.Vote, error)
+	// VoteExists checks on some specific vote existance
+	VoteExists(ctx context.Context, voteId string) (*bool, error)
 }
 
 // vote is a struct that represents vote entity in repository layer and its the way we can access to repository methods of
@@ -43,15 +45,17 @@ func NewVoteRepo() VoteRepo {
 	return new(vote)
 }
 
-func (v *vote) SaveVote(ctx context.Context, newVote models.Vote) error {
+func (v *vote) SaveVote(ctx context.Context, newVote models.Vote) (*models.VoteId, error) {
 	_, err := DBS.Couch.Query(couchbaseQueries.SaveVoteQuery, &gocb.QueryOptions{
 		PositionalParameters: []interface{}{newVote.Id, newVote},
 	})
 	if err != nil {
 		log.Println(" error in taking new vote, error :", err.Error())
-		return err
+		return nil, err
 	}
-	return nil
+	return &models.VoteId{
+		VoteId: newVote.Id.String(),
+	}, nil
 }
 
 func (v *vote) ReadSpecificVoteData(ctx context.Context, voteId string) (*models.Vote, error) {
@@ -131,7 +135,7 @@ func (v *vote) AgregateOfCandidateNegativeVotes(ctx context.Context, candidateId
 }
 
 func (v *vote) UpdateVoteData(ctx context.Context, newVoteData models.Vote) error {
-  
+
 	_, err := DBS.Couch.Query(couchbaseQueries.UpdateVoteQuery, &gocb.QueryOptions{
 		PositionalParameters: []interface{}{
 			newVoteData.CandidateId,
@@ -231,4 +235,33 @@ func (v *vote) GetCandidateNegativeVotes(ctx context.Context, candidateId, order
 	}
 
 	return votes, nil
+}
+
+func (v vote) VoteExists(ctx context.Context, voteId string) (*bool, error) {
+	result, err := DBS.Couch.Query(couchbaseQueries.VoteExistsQuery, &gocb.QueryOptions{
+		PositionalParameters: []interface{}{voteId},
+	})
+	if err != nil {
+		log.Println("error in query execution, error :", err.Error())
+		return nil, err
+	}
+
+	var exists bool
+	var count models.VoteCount
+	err = result.One(&count)
+	if err != nil {
+		if err == gocb.ErrNoResult {
+			return &exists, nil
+		}
+		log.Println("error in reading vote count, error :", err.Error())
+		return nil, err
+	}
+
+	if count.Count > 0 {
+		exists = true
+		return &exists, nil
+	}
+
+	return &exists, nil
+
 }

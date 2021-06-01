@@ -36,4 +36,9 @@ const (
 	UpdateVoteQuery = ` UPDATE ` + constants.VotesBucket + ` SET 
 		  candidate_id=$1, contributor_id=$2, vote_value=$3, private_voting=$4,
 			election_id=$5 WHERE id= $6`
+
+	VoteExistsQuery = ` SELECT count(*) FROM ` + constants.VotesBucket + ` WHERE 
+    (deleted = false OR deleted IS MISSING OR deleted IS NULL) AND 
+		 id = $1 
+      `
 )
