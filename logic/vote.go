@@ -11,21 +11,27 @@ import (
 	"github.com/google/uuid"
 )
 
+// VoteLogic is interface of vote entity in logic layer of system
 type VoteLogic interface {
-	SaveNewVote(ctx context.Context, voteData models.Vote, requesterId string) error
+	// SaveNewVote saves new vote data and returns id of the vote
+	SaveNewVote(ctx context.Context, voteData models.Vote, requesterId string) (*models.VoteId, error)
+	// ReadVoteData returns data of given voteId
+	ReadVoteData(ctx context.Context, voteId, requesterId string, requestedByAdmin bool) (*models.Vote, error)
 }
 
+// vote is a struct that is way to access vote methods in logic layer
 type vote struct {
 	repo           repository.VoteRepo
 	electionLogic  ElectionLogic
 	candidateLogic CandidateLogic
 }
 
+// NewVoteLogic is constractor fucntion of VoteLogic
 func NewVoteLogic() VoteLogic {
 	return new(vote)
 }
 
-func (v *vote) SaveNewVote(ctx context.Context, voteData models.Vote, requesterId string) error {
+func (v *vote) SaveNewVote(ctx context.Context, voteData models.Vote, requesterId string) (*models.VoteId, error) {
 	if v.repo == nil {
 		v.repo = repository.NewVoteRepo()
 	}
@@ -37,15 +43,15 @@ func (v *vote) SaveNewVote(ctx context.Context, voteData models.Vote, requesterI
 	}
 
 	if err := voteData.Validate(); err != nil {
-		return err
+		return nil, err
 	}
 
 	if _, err := v.electionLogic.CheckElectionExistance(ctx, voteData.ElectionId); err != nil {
-		return err
+		return nil, err
 	}
 
 	if _, err := v.candidateLogic.CandidateExistanceCheck(ctx, voteData.CandidateId); err != nil {
-		return err
+		return nil, err
 	}
 
 	// TODO : checking for contributor access on this specific election
@@ -53,10 +59,42 @@ func (v *vote) SaveNewVote(ctx context.Context, voteData models.Vote, requesterI
 	voteData.ContributorId = requesterId
 	voteData.VoteTime = time.Now()
 
-	err := v.repo.SaveVote(ctx, voteData)
+	id, err := v.repo.SaveVote(ctx, voteData)
 	if err != nil {
-		return errors.New(constants.InternalServerError)
+		return nil, errors.New(constants.InternalServerError)
 	}
 
-	return nil
+	return id, nil
+}
+
+func (v vote) ReadVoteData(ctx context.Context, voteId, requesterId string, requestedByAdmin bool) (*models.Vote, error) {
+	// singlton design pattern ...
+	if v.repo == nil {
+		v.repo = repository.NewVoteRepo()
+	}
+
+	// check for vote existance
+	exists, err := v.repo.VoteExists(ctx, voteId)
+	if err != nil {
+		return nil, errors.New(constants.InternalServerError)
+	}
+
+	if !*exists {
+		return nil, errors.New(constants.VoteDoesNotExist)
+	}
+
+	// reading the vote
+	theVote, err := v.repo.ReadSpecificVoteData(ctx, voteId)
+	if err != nil {
+		return nil, errors.New(constants.InternalServerError)
+	}
+
+	// access checking
+	if !requestedByAdmin {
+		if requesterId != theVote.ContributorId {
+			return nil, errors.New(constants.AccessDenied)
+		}
+	}
+
+	return theVote, nil
 }
