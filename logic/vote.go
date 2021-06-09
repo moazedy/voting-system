@@ -21,6 +21,8 @@ type VoteLogic interface {
 	DeleteVote(ctx context.Context, voteId, requesterId string, requestedByAdmin bool) error
 	// AgregateOfCandidatePositiveVotes is to reading count of some candidate's positive votes
 	AgregateOfCandidatePositiveVotes(ctx context.Context, candidateId, requesterId string, requestedByAdmin bool) (*models.CandidateVotesCount, error)
+	// AgregateOfCandidateNegativeVotes is to reading count of some candidate's negative votes
+	AgregateOfCandidateNegativeVotes(ctx context.Context, candidateId, requesterId string, requestedByAdmin bool) (*models.CandidateVotesCount, error)
 }
 
 // vote is a struct that is way to access vote methods in logic layer
@@ -139,12 +141,38 @@ func (v vote) AgregateOfCandidatePositiveVotes(ctx context.Context, candidateId,
 		v.candidateLogic = NewCandidateLogic()
 	}
 
+	// calling ReadingCandidateData on some candidateId, without considering returning data, checks on all validations and
+	// access levels
 	_, err := v.candidateLogic.ReadCandidateData(ctx, candidateId, requesterId, requestedByAdmin)
 	if err != nil {
 		return nil, err
 	}
 
 	votes, err := v.repo.AgregateOfCandidatePositiveVotes(ctx, candidateId)
+	if err != nil {
+		return nil, errors.New(constants.InternalServerError)
+	}
+
+	return votes, nil
+}
+
+func (v vote) AgregateOfCandidateNegativeVotes(ctx context.Context, candidateId, requesterId string, requestedByAdmin bool) (*models.CandidateVotesCount, error) {
+	// singlton design pattern ...
+	if v.repo == nil {
+		v.repo = repository.NewVoteRepo()
+	}
+	if v.candidateLogic == nil {
+		v.candidateLogic = NewCandidateLogic()
+	}
+
+	// calling ReadingCandidateData on some candidateId, without considering returning data, checks on all validations and
+	// access levels
+	_, err := v.candidateLogic.ReadCandidateData(ctx, candidateId, requesterId, requestedByAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	votes, err := v.repo.AgregateOfCandidateNegativeVotes(ctx, candidateId)
 	if err != nil {
 		return nil, errors.New(constants.InternalServerError)
 	}
