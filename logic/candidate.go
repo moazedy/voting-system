@@ -110,7 +110,7 @@ func (c *candidate) CandidateExistanceCheck(ctx context.Context, candidateId str
 		c.repo = repository.NewCandidateRepo()
 	}
 
-	if err := candidateIdValidate(candidateId); err != nil {
+	if err := IdValidation(candidateId); err != nil {
 		return nil, err
 	}
 

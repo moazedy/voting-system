@@ -74,7 +74,7 @@ func (e *election) ReadElectionData(ctx context.Context, electionId string) (*mo
 		e.repo = repository.NewElectionRepo()
 	}
 
-	if err := electionIdValidate(electionId); err != nil {
+	if err := IdValidation(electionId); err != nil {
 		return nil, err
 	}
 
@@ -122,7 +122,7 @@ func (e *election) GetElectionContributorsCount(ctx context.Context, electionId 
 		e.repo = repository.NewElectionRepo()
 	}
 
-	if err := electionIdValidate(electionId); err != nil {
+	if err := IdValidation(electionId); err != nil {
 		return nil, err
 	}
 
@@ -170,7 +170,7 @@ func (e *election) CheckElectionExistance(ctx context.Context, electionId string
 		e.repo = repository.NewElectionRepo()
 	}
 
-	if err := electionIdValidate(electionId); err != nil {
+	if err := IdValidation(electionId); err != nil {
 		return nil, err
 	}
 
