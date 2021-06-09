@@ -7,29 +7,15 @@ import (
 	"github.com/google/uuid"
 )
 
-func electionIdValidate(Id string) error {
+func IdValidation(Id string) error {
 	if Id == "" {
-		return errors.New(constants.InvalidElectionId)
+		return errors.New(constants.IdCanNotBeEmpty)
 	}
 
 	_, err := uuid.Parse(Id)
 	if err != nil {
-		return errors.New(constants.InvalidElectionId)
+		return errors.New(constants.InvalidId)
 	}
 
 	return nil
-}
-
-func candidateIdValidate(Id string) error {
-	if Id == "" {
-		return errors.New(constants.CandidateIdCanNotBeEmpty)
-	}
-
-	_, err := uuid.Parse(Id)
-	if err != nil {
-		return errors.New(constants.InvalidCandidateId)
-	}
-
-	return nil
-
 }
