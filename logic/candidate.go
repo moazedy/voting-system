@@ -6,6 +6,7 @@ import (
 	"time"
 	"voting-system/constants"
 	"voting-system/domain/models"
+	"voting-system/helper"
 	"voting-system/repository"
 
 	"github.com/google/uuid"
@@ -22,7 +23,9 @@ type CandidateLogic interface {
 	// CandidateExistanceCheck checks for some candidate existance in db
 	CandidateExistanceCheck(ctx context.Context, candidateId string) (*bool, error)
 	// GetListOfSomeElectionCandidates gets list of all election candidates
-	GetListOfElectionCandidates(ctx context.Context, electionId, order string, offset, limit int) ([]models.Candidate, error)
+	GetListOfElectionCandidates(ctx context.Context, electionId string, pagination helper.Pagination) ([]models.Candidate, error)
+	// UpdateCandidate updates some candidate's data
+	UpdateCandidate(ctx context.Context, candidateId, requesterId string, candidateData models.Candidate, requestedByAdmin bool) error
 }
 
 // candidate is a struct that holds methods for candidate in logic
@@ -126,14 +129,47 @@ func (c *candidate) CandidateExistanceCheck(ctx context.Context, candidateId str
 	return exists, nil
 }
 
-func (c *candidate) GetListOfElectionCandidates(ctx context.Context, electionId, order string, offset, limit int) ([]models.Candidate, error) {
+func (c *candidate) GetListOfElectionCandidates(ctx context.Context, electionId string, pagination helper.Pagination) ([]models.Candidate, error) {
 	if c.repo == nil {
 		c.repo = repository.NewCandidateRepo()
 	}
 
-	contributors, err := c.repo.GetListOfElectionCandidates(ctx, electionId, order, offset, limit)
+	contributors, err := c.repo.GetListOfElectionCandidates(ctx,
+		electionId,
+		pagination.GetOrder(),
+		pagination.GetOffset(),
+		pagination.GetLimit(),
+	)
 	if err != nil {
 		return nil, errors.New(constants.InternalServerError)
 	}
 	return contributors, nil
+}
+
+func (c candidate) UpdateCandidate(ctx context.Context, candidateId, requesterId string, candidateData models.Candidate, requestedByAdmin bool) error {
+	if c.repo == nil {
+		c.repo = repository.NewCandidateRepo()
+	}
+
+	_, err := c.ReadCandidateData(ctx, candidateId, requesterId, requestedByAdmin)
+	if err != nil {
+		return err
+	}
+
+	if err := candidateData.Validate(); err != nil {
+		return err
+	}
+
+	uid, err := uuid.Parse(candidateId)
+	if err != nil {
+		return errors.New(constants.InvalidId)
+	}
+	candidateData.Id = uid
+
+	err = c.repo.UpdateCandidate(ctx, candidateData)
+	if err != nil {
+		return errors.New(constants.InternalServerError)
+	}
+
+	return nil
 }

@@ -205,7 +205,7 @@ func (v vote) UpdateVoteData(ctx context.Context, voteId, requesterId string, vo
 
 	uid, err := uuid.Parse(voteId)
 	if err != nil {
-		return errors.New(constants.InternalServerError)
+		return errors.New(constants.InvalidId)
 	}
 	voteData.Id = uid
 
