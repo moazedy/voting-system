@@ -6,6 +6,7 @@ import (
 	"time"
 	"voting-system/constants"
 	"voting-system/domain/models"
+	"voting-system/helper"
 	"voting-system/repository"
 
 	"github.com/google/uuid"
@@ -25,6 +26,8 @@ type VoteLogic interface {
 	AgregateOfCandidateNegativeVotes(ctx context.Context, candidateId, requesterId string, requestedByAdmin bool) (*models.CandidateVotesCount, error)
 	// UpdateVoteData updates data of some specific vote
 	UpdateVoteData(ctx context.Context, voteId, requesterId string, voteData models.Vote, requestedByAdmin bool) error
+	// GetCandidateVotes gets all of a specific candidate votes
+	GetCandidateVotes(ctx context.Context, candidateId, requesterId string, pagination helper.Pagination, requestedByAdmin bool) ([]models.Vote, error)
 }
 
 // vote is a struct that is way to access vote methods in logic layer
@@ -208,4 +211,31 @@ func (v vote) UpdateVoteData(ctx context.Context, voteId, requesterId string, vo
 	}
 
 	return nil
+}
+
+func (v vote) GetCandidateVotes(ctx context.Context, candidateId, requesterId string, pagination helper.Pagination, requestedByAdmin bool) ([]models.Vote, error) {
+	// singlton design pattern ...
+	if v.repo == nil {
+		v.repo = repository.NewVoteRepo()
+	}
+
+	// calling ReadingCandidateData on some candidateId, without considering returning data, checks on all validations and
+	// access levels
+	_, err := v.candidateLogic.ReadCandidateData(ctx, candidateId, requesterId, requestedByAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	votes, err := v.repo.GetCandidateVotes(
+		ctx,
+		candidateId,
+		pagination.GetOrder(),
+		pagination.GetOffset(),
+		pagination.GetLimit(),
+	)
+	if err != nil {
+		return nil, errors.New(constants.InternalServerError)
+	}
+
+	return votes, nil
 }
