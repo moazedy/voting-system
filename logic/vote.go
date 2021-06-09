@@ -30,6 +30,8 @@ type VoteLogic interface {
 	GetCandidateVotes(ctx context.Context, candidateId, requesterId string, pagination helper.Pagination, requestedByAdmin bool) ([]models.Vote, error)
 	// GetCandidatePositiveVotes gets list of positive votes of some candidate
 	GetCandidatePositiveVotes(ctx context.Context, candidateId, requesterId string, pagination helper.Pagination, requestedByAdmin bool) ([]models.Vote, error)
+	// GetCandidateNegativeVotes gets list of negative votes of some candidate
+	GetCandidateNegativeVotes(ctx context.Context, candidateId, requesterId string, pagination helper.Pagination, requestedByAmdin bool) ([]models.Vote, error)
 }
 
 // vote is a struct that is way to access vote methods in logic layer
@@ -256,6 +258,33 @@ func (v vote) GetCandidatePositiveVotes(ctx context.Context, candidateId, reques
 	}
 
 	votes, err := v.repo.GetCandidatePositiveVotes(
+		ctx,
+		candidateId,
+		pagination.GetOrder(),
+		pagination.GetOffset(),
+		pagination.GetLimit(),
+	)
+	if err != nil {
+		return nil, errors.New(constants.InternalServerError)
+	}
+
+	return votes, nil
+}
+
+func (v vote) GetCandidateNegativeVotes(ctx context.Context, candidateId, requesterId string, pagination helper.Pagination, requestedByAdmin bool) ([]models.Vote, error) {
+	// singlton design pattern ...
+	if v.repo == nil {
+		v.repo = repository.NewVoteRepo()
+	}
+
+	// calling ReadingCandidateData on some candidateId, without considering returning data, checks on all validations and
+	// access levels
+	_, err := v.candidateLogic.ReadCandidateData(ctx, candidateId, requesterId, requestedByAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	votes, err := v.repo.GetCandidateNegativeVotes(
 		ctx,
 		candidateId,
 		pagination.GetOrder(),
