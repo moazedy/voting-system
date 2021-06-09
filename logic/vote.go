@@ -23,6 +23,8 @@ type VoteLogic interface {
 	AgregateOfCandidatePositiveVotes(ctx context.Context, candidateId, requesterId string, requestedByAdmin bool) (*models.CandidateVotesCount, error)
 	// AgregateOfCandidateNegativeVotes is to reading count of some candidate's negative votes
 	AgregateOfCandidateNegativeVotes(ctx context.Context, candidateId, requesterId string, requestedByAdmin bool) (*models.CandidateVotesCount, error)
+	// UpdateVoteData updates data of some specific vote
+	UpdateVoteData(ctx context.Context, voteId, requesterId string, voteData models.Vote, requestedByAdmin bool) error
 }
 
 // vote is a struct that is way to access vote methods in logic layer
@@ -178,4 +180,32 @@ func (v vote) AgregateOfCandidateNegativeVotes(ctx context.Context, candidateId,
 	}
 
 	return votes, nil
+}
+
+func (v vote) UpdateVoteData(ctx context.Context, voteId, requesterId string, voteData models.Vote, requestedByAdmin bool) error {
+	// singlton design pattern ...
+	if v.repo == nil {
+		v.repo = repository.NewVoteRepo()
+	}
+
+	if err := IdValidation(voteId); err != nil {
+		return err
+	}
+
+	if err := voteData.Validate(); err != nil {
+		return err
+	}
+
+	uid, err := uuid.Parse(voteId)
+	if err != nil {
+		return errors.New(constants.InternalServerError)
+	}
+	voteData.Id = uid
+
+	err = v.repo.UpdateVoteData(ctx, voteData)
+	if err != nil {
+		return errors.New(constants.InternalServerError)
+	}
+
+	return nil
 }
