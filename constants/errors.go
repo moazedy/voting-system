@@ -25,4 +25,6 @@ const (
 	ContributorIdCanNotBeEmpty         = "contributor_id_can_not_be_empty"
 	InvalidContributorId               = "invalid_contributor_id"
 	VoteDoesNotExist                   = "vote_does_not_exist"
+	IdCanNotBeEmpty                    = "id_can_not_be_empty"
+	InvalidId                          = "invalid_id"
 )
