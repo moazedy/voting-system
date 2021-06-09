@@ -13,3 +13,7 @@ const (
 	MaximomCandidatesCount     = 10
 	MaximomCandidateNameLength = 50
 )
+
+const (
+	MximomContributorNameLength = 50
+)
