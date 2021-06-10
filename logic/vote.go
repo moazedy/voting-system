@@ -15,7 +15,7 @@ import (
 // VoteLogic is interface of vote entity in logic layer of system
 type VoteLogic interface {
 	// SaveNewVote saves new vote data and returns id of the vote
-	SaveNewVote(ctx context.Context, voteData models.Vote, requesterId string) (*models.VoteId, error)
+	SaveNewVote(ctx context.Context, voteData models.Vote, requesterId string) (*models.ContributionData, error)
 	// ReadVoteData returns data of given voteId
 	ReadVoteData(ctx context.Context, voteId, requesterId string, requestedByAdmin bool) (*models.Vote, error)
 	// DeleteVote deletes requested voteId and returns an error if any problem happens during the operation
@@ -36,9 +36,10 @@ type VoteLogic interface {
 
 // vote is a struct that is way to access vote methods in logic layer
 type vote struct {
-	repo           repository.VoteRepo
-	electionLogic  ElectionLogic
-	candidateLogic CandidateLogic
+	repo             repository.VoteRepo
+	electionLogic    ElectionLogic
+	candidateLogic   CandidateLogic
+	contributorLogic ContributorLogic
 }
 
 // NewVoteLogic is constractor fucntion of VoteLogic
@@ -46,7 +47,8 @@ func NewVoteLogic() VoteLogic {
 	return new(vote)
 }
 
-func (v *vote) SaveNewVote(ctx context.Context, voteData models.Vote, requesterId string) (*models.VoteId, error) {
+func (v *vote) SaveNewVote(ctx context.Context, voteData models.Vote, requesterId string) (*models.ContributionData, error) {
+	// implementation of singleton design pattern
 	if v.repo == nil {
 		v.repo = repository.NewVoteRepo()
 	}
@@ -56,30 +58,71 @@ func (v *vote) SaveNewVote(ctx context.Context, voteData models.Vote, requesterI
 	if v.candidateLogic == nil {
 		v.candidateLogic = NewCandidateLogic()
 	}
+	if v.contributorLogic == nil {
+		v.contributorLogic = NewContributorLogic()
+	}
 
+	// TODO: validation of vote data should be according to the election type
+
+	// validation of received data as a vote
 	if err := voteData.Validate(); err != nil {
 		return nil, err
 	}
 
+	// check on election existance
 	if _, err := v.electionLogic.CheckElectionExistance(ctx, voteData.ElectionId); err != nil {
 		return nil, err
 	}
 
+	// check on selected conadidate existance
 	if _, err := v.candidateLogic.CandidateExistanceCheck(ctx, voteData.CandidateId); err != nil {
 		return nil, err
 	}
 
-	// TODO : checking for contributor access on this specific election
+	// this part of code checks if this reuqester has participated in the requested election, could not vote any more
+	// because every one can vote just one time in an election
+	contributorExists, err := v.contributorLogic.ContributorExists(ctx, requesterId, voteData.ElectionId)
+	if err != nil {
+		return nil, err
+	}
+	if *contributorExists {
+		return nil, errors.New(constants.ContributorAlredyExists)
+	}
+
+	// TODO : checking for contributor access on this specific election if election has it's own access levels
 	voteData.Id = uuid.New()
 	voteData.ContributorId = requesterId
 	voteData.VoteTime = time.Now()
 
-	id, err := v.repo.SaveVote(ctx, voteData)
+	// saving vote into db
+	voteId, err := v.repo.SaveVote(ctx, voteData)
 	if err != nil {
 		return nil, errors.New(constants.InternalServerError)
 	}
 
-	return id, nil
+	// creating contributor data, using received data for voting
+	contributorData := models.Contributor{
+		Name:           voteData.ContributorName,
+		ContributeTime: time.Now(),
+		ElectionId:     voteData.ElectionId,
+		VotedAt:        time.Now(),
+	}
+	// saving contributor data which has participated in the election with his/shes vote
+	contributorId, err := v.contributorLogic.SaveNewContributor(ctx, requesterId, contributorData)
+	if err != nil {
+		// if contributor could not be saved in db, the given vote should be deleted
+		er := v.repo.DeleteVote(ctx, voteId.VoteId)
+		if er != nil {
+			return nil, errors.New(constants.InternalServerError)
+		}
+		return nil, err
+	}
+
+	return &models.ContributionData{
+		ContributorId: contributorId.Id,
+		VoteId:        voteId.VoteId,
+		ElectionId:    voteData.ElectionId,
+	}, nil
 }
 
 func (v vote) ReadVoteData(ctx context.Context, voteId, requesterId string, requestedByAdmin bool) (*models.Vote, error) {
