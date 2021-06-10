@@ -47,7 +47,7 @@ func NewVoteLogic() VoteLogic {
 	return new(vote)
 }
 
-func (v *vote) SaveNewVote(ctx context.Context, voteData models.Vote, requesterId string) (*models.ContributionData, error) {
+func (v vote) SaveNewVote(ctx context.Context, voteData models.Vote, requesterId string) (*models.ContributionData, error) {
 	// implementation of singleton design pattern
 	if v.repo == nil {
 		v.repo = repository.NewVoteRepo()
@@ -69,8 +69,14 @@ func (v *vote) SaveNewVote(ctx context.Context, voteData models.Vote, requesterI
 		return nil, err
 	}
 
-	// check on election existance
-	if _, err := v.electionLogic.CheckElectionExistance(ctx, voteData.ElectionId); err != nil {
+	// reading the election data
+	theElection, err := v.electionLogic.ReadElectionData(ctx, voteData.ElectionId)
+	if err != nil {
+		return nil, err
+	}
+
+	// validation of voteData according to the election type
+	if err := voteData.VoteValidationAccordingToElectionType(theElection.Type); err != nil {
 		return nil, err
 	}
 
