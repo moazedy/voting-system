@@ -15,7 +15,7 @@ import (
 // CandidateLogic is interface for candidate entity in logic layer
 type CandidateLogic interface {
 	// CreateNewCandidate creates new candidate
-	CreateNewCandidate(ctx context.Context, candidateData models.Candidate) error
+	CreateNewCandidate(ctx context.Context, candidateData models.Candidate) (*models.Id, error)
 	// ReadCandidateData reads data of givne candidate
 	ReadCandidateData(ctx context.Context, candidateId, requesterId string, requestedByAdmin bool) (*models.Candidate, error)
 	// DeleteCandidate deletes given candidateId
@@ -39,31 +39,31 @@ func NewCandidateLogic() CandidateLogic {
 
 }
 
-func (c *candidate) CreateNewCandidate(ctx context.Context, candidateData models.Candidate) error {
+func (c *candidate) CreateNewCandidate(ctx context.Context, candidateData models.Candidate) (*models.Id, error) {
 	if c.repo == nil {
 		c.repo = repository.NewCandidateRepo()
 	}
 
 	if err := candidateData.Validate(); err != nil {
-		return err
+		return nil, err
 	}
 
 	candidateData.Id = uuid.New()
 	candidateData.Created_At = time.Now()
 	electionExists, err := repository.NewElectionRepo().ElectionExists(ctx, candidateData.Id.String())
 	if err != nil {
-		return errors.New(constants.InternalServerError)
+		return nil, errors.New(constants.InternalServerError)
 	}
 	if !*electionExists {
-		return errors.New(constants.ElectionDoesNotExist)
+		return nil, errors.New(constants.ElectionDoesNotExist)
 	}
 
-	err = c.repo.CreateCandidate(ctx, candidateData)
+	id, err := c.repo.CreateCandidate(ctx, candidateData)
 	if err != nil {
-		return errors.New(constants.InternalServerError)
+		return nil, errors.New(constants.InternalServerError)
 	}
 
-	return nil
+	return id, nil
 }
 
 func (c *candidate) ReadCandidateData(ctx context.Context, candidateId, requesterId string, requestedByAdmin bool) (*models.Candidate, error) {

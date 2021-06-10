@@ -14,7 +14,7 @@ import (
 // interface here
 type CandidateRepo interface {
 	// CreateCandidate is for creating new candidate entitiy in voting system
-	CreateCandidate(ctx context.Context, NewCandidate models.Candidate) error
+	CreateCandidate(ctx context.Context, NewCandidate models.Candidate) (*models.Id, error)
 	// ReadCandidate reads data of requested candidate id, if it exists in db
 	ReadCandidate(ctx context.Context, candidateId string) (*models.Candidate, error)
 	// GetListOfSomeElectionCandidates gets list of all election candidates
@@ -38,15 +38,22 @@ func NewCandidateRepo() CandidateRepo {
 	return new(candidate)
 }
 
-func (c *candidate) CreateCandidate(ctx context.Context, NewCandidate models.Candidate) error {
-	_, err := DBS.Couch.Query(couchbaseQueries.SaveNewCandidateQuery, &gocb.QueryOptions{
+func (c *candidate) CreateCandidate(ctx context.Context, NewCandidate models.Candidate) (*models.Id, error) {
+	result, err := DBS.Couch.Query(couchbaseQueries.SaveNewCandidateQuery, &gocb.QueryOptions{
 		PositionalParameters: []interface{}{NewCandidate.Id, NewCandidate},
 	})
 	if err != nil {
 		log.Println(" error in saving new candidate, error :", err.Error())
-		return err
+		return nil, err
 	}
-	return nil
+
+	var id models.Id
+	err = result.One(&id)
+	if err != nil {
+		log.Println("error in reading candidate id value, error : ", err.Error())
+		return nil, err
+	}
+	return &id, nil
 }
 
 func (c *candidate) ReadCandidate(ctx context.Context, candidateId string) (*models.Candidate, error) {

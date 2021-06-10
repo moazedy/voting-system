@@ -4,7 +4,7 @@ import "voting-system/constants"
 
 const (
 	SaveNewCandidateQuery = ` INSERT INTO ` + constants.CandidatesBucket + ` (KEY,VALUE) 
-   VALUES ($1, $2)`
+   VALUES ($1, $2) RETURNING meta().id AS id`
 
 	ReadCandidateDataQuery = ` SELECT * FROM ` + constants.CandidatesBucket + ` WHERE 
     (deleted = false OR deleted IS MISSING OR deleted IS NULL) AND 
