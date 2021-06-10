@@ -29,4 +29,6 @@ const (
 	InvalidId                           = "invalid_id"
 	ContributorNameCanNotBeEmpty        = "contributor_name_can_not_be_empty"
 	ContributorNameIsLongerThanExpected = "contributor_name_is_longer_than_expected"
+	ContributorAlredyExists             = "contributor_alredy_exists"
+	ContributorDoesNotExist             = "contributor_does_not_exist"
 )
