@@ -9,7 +9,8 @@ import (
 )
 
 type Contributor struct {
-	Id             uuid.UUID `json:"id"`
+	MetaId         uuid.UUID `json:"meta_id"`
+	ContributorId  string    `json:"contributor_id"`
 	Name           string    `json:"name,omitempty"`
 	ContributeTime time.Time `json:"contribute_time"`
 	Deleted        bool      `json:"deleted"`
