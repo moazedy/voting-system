@@ -87,3 +87,26 @@ type VoteId struct {
 type VoteCount struct {
 	Count int `json:"count"`
 }
+
+// VoteValidationAccordingToElectionType checks vote values validation according to election
+func (v *Vote) VoteValidationAccordingToElectionType(electionType ElectionType) error {
+	switch electionType {
+	case PublicVotersData:
+		// TODO : checking dependencies of this type of election
+		return nil
+	case PrivateVotersData:
+		// TODO : checking dependencies of this type of election
+		return nil
+	case SimpleYesOrNo:
+		// TODO : checking dependencies of this type of election
+		return nil
+	case PrivateLimitedCount:
+		// TODO : checking dependencies of this type of election
+		return nil
+	case PublicLimitedCount:
+		// TODO : checking dependencies of this type of election
+		return nil
+	default:
+		return errors.New(constants.InvalidElectionType)
+	}
+}
