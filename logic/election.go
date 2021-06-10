@@ -15,7 +15,7 @@ import (
 // through this interface here
 type ElectionLogic interface {
 	// CreateNewElection craates new election using receieved election data
-	CreateNewElection(ctx context.Context, userId string, electionData models.Election) error
+	CreateNewElection(ctx context.Context, userId string, electionData models.Election) (*models.Id, error)
 	// ReadElectionData reads data of given election id
 	ReadElectionData(ctx context.Context, electionId string) (*models.Election, error)
 	// DeleteElection deletes the election with received election id
@@ -47,7 +47,7 @@ func NewElectionLogic() ElectionLogic {
 	return new(election)
 }
 
-func (e *election) CreateNewElection(ctx context.Context, userId string, electionData models.Election) error {
+func (e *election) CreateNewElection(ctx context.Context, userId string, electionData models.Election) (*models.Id, error) {
 	// this part of code follows singlton design pattern
 	if e.repo == nil {
 		e.repo = repository.NewElectionRepo()
@@ -58,14 +58,15 @@ func (e *election) CreateNewElection(ctx context.Context, userId string, electio
 	electionData.CreationTime = time.Now()
 
 	if err := electionData.Validate(); err != nil {
-		return err
+		return nil, err
 	}
 
-	if err := e.repo.SaveNewElection(ctx, electionData); err != nil {
-		return errors.New(constants.InternalServerError)
+	id, err := e.repo.SaveNewElection(ctx, electionData)
+	if err != nil {
+		return nil, errors.New(constants.InternalServerError)
 	}
 
-	return nil
+	return id, nil
 }
 
 func (e *election) ReadElectionData(ctx context.Context, electionId string) (*models.Election, error) {

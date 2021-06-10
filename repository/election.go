@@ -13,7 +13,7 @@ import (
 // interface here
 type ElectionRepo interface {
 	// SaveNewElection saves a new election in db
-	SaveNewElection(ctx context.Context, newElection models.Election) error
+	SaveNewElection(ctx context.Context, newElection models.Election) (*models.Id, error)
 	// ReadElectionData reads some election's data in db using given Id
 	ReadElectionData(ctx context.Context, electionId string) (*models.Election, error)
 	// DeleteElection deletes given election
@@ -44,15 +44,22 @@ func NewElectionRepo() ElectionRepo {
 	return new(election)
 }
 
-func (e *election) SaveNewElection(ctx context.Context, newElection models.Election) error {
-	_, err := DBS.Couch.Query(couchbaseQueries.SaveElectionQuery, &gocb.QueryOptions{
+func (e *election) SaveNewElection(ctx context.Context, newElection models.Election) (*models.Id, error) {
+	result, err := DBS.Couch.Query(couchbaseQueries.SaveElectionQuery, &gocb.QueryOptions{
 		PositionalParameters: []interface{}{newElection.Id, newElection},
 	})
 	if err != nil {
 		log.Println(" error in saving new election, error :", err.Error())
-		return err
+		return nil, err
 	}
-	return nil
+
+	var id models.Id
+	err = result.One(&id)
+	if err != nil {
+		log.Println("error in reading new election id value, error : ", err.Error())
+		return nil, err
+	}
+	return &id, nil
 }
 
 func (e *election) ReadElectionData(ctx context.Context, electionId string) (*models.Election, error) {
