@@ -23,9 +23,10 @@ type CandidateRepo interface {
 	DeleteCandidate(ctx context.Context, candidateId string) error
 	// UpdateCandidate updates candidate data using received data
 	UpdateCandidate(ctx context.Context, candidateData models.Candidate) error
-
 	// IsCandidateExists checks if given candidate id exists in system or not
 	IsCandidateExists(ctx context.Context, candidateId string) (*bool, error)
+	// GetAllElectionCandidates gets list of all candidates in an election
+	GetAllElectionCandidates(ctx context.Context, electionId string) ([]models.Candidate, error)
 }
 
 // candidate is a struct that represents candidate entity in repository layer and its the way we can access to repository methods of
@@ -158,4 +159,31 @@ func (c *candidate) IsCandidateExists(ctx context.Context, candidateId string) (
 	}
 	return &exists, nil
 
+}
+
+func (c candidate) GetAllElectionCandidates(ctx context.Context, electionId string) ([]models.Candidate, error) {
+	result, err := DBS.Couch.Query(couchbaseQueries.GetAllElectionCandidatesQuery, &gocb.QueryOptions{
+		PositionalParameters: []interface{}{electionId},
+	})
+	if err != nil {
+		log.Println("error in query execution, error :", err.Error())
+		return nil, err
+	}
+
+	var candidates []models.Candidate
+	for result.Next() {
+		var candid models.Candidate
+		err := result.Row(&candid)
+		if err != nil {
+			if err == gocb.ErrNoResult {
+				return candidates, nil
+			}
+			log.Println("error in reading candidate item, error :", err.Error())
+			return nil, err
+		}
+
+		candidates = append(candidates, candid)
+	}
+
+	return candidates, nil
 }

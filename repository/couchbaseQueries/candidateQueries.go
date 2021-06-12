@@ -25,4 +25,7 @@ const (
     (deleted = false OR deleted IS MISSING OR deleted IS NULL) AND 
 		id = $1 
    `
+	GetAllElectionCandidatesQuery = ` SELECT * FROM ` + constants.CandidatesBucket + ` WHERE 
+    (deleted = false OR deleted IS MISSING OR deleted IS NULL) AND 
+      election_id=$1 `
 )
