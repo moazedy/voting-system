@@ -32,3 +32,10 @@ const (
 	ContributorAlredyExists             = "contributor_alredy_exists"
 	ContributorDoesNotExist             = "contributor_does_not_exist"
 )
+
+// error keies
+const (
+	ReadingElectionError   = "reading election error"
+	AccessError            = "access error"
+	ReadingCandidatesError = "reading candidates error"
+)

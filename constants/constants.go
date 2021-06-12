@@ -2,10 +2,11 @@ package constants
 
 // couchbase bucket names
 const (
-	VotesBucket        = "votes"
-	CandidatesBucket   = "candidates"
-	ContributorsBucket = "contributors"
-	ElectionsBucket    = "elections"
+	VotesBucket           = "votes"
+	CandidatesBucket      = "candidates"
+	ContributorsBucket    = "contributors"
+	ElectionsBucket       = "elections"
+	ElectionResultsBucket = "election_results"
 )
 
 const (
@@ -16,4 +17,13 @@ const (
 
 const (
 	MximomContributorNameLength = 50
+)
+
+const (
+	DESCorder = "desc"
+)
+
+const (
+	PositiveVotes = " positive votes "
+	NegativeVotes = " negative votes "
 )
