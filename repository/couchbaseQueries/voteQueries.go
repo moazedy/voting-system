@@ -15,10 +15,21 @@ const (
     AND candidate_id = $1 
      ORDER BY %s OFFSET $2 LIMIT $3`
 
+	GetAllCandidatePositiveVotesQuery = ` SELECT * FROM ` + constants.VotesBucket + ` WHERE 
+    (deleted = false OR deleted IS MISSING OR deleted IS NULL) AND vote_value=true 
+    AND candidate_id = $1 
+     `
+
 	GetCandidateNegativeVotesQuery = ` SELECT * FROM ` + constants.VotesBucket + ` WHERE 
     (deleted = false OR deleted IS MISSING OR deleted IS NULL) AND (vote_value = false OR vote_value IS MISSING OR vote_value IS NULL )
      AND candidate_id = $1 
 		  ORDER BY %s OFFSET $2 LIMIT $3 `
+
+	GetAllCandidateNegativeVotesQuery = ` SELECT * FROM ` + constants.VotesBucket + ` WHERE 
+    (deleted = false OR deleted IS MISSING OR deleted IS NULL) 
+	  	AND (vote_value = false OR vote_value IS MISSING OR vote_value IS NULL )
+      AND candidate_id = $1 
+		   `
 
 	GetCandidateVotesQuery = `SELECT * FROM ` + constants.VotesBucket + ` WHERE 
 		(deleted = false OR deleted IS MISSING OR deleted IS NULL) AND   
