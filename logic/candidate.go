@@ -26,11 +26,14 @@ type CandidateLogic interface {
 	GetListOfElectionCandidates(ctx context.Context, electionId string, pagination helper.Pagination) ([]models.Candidate, error)
 	// UpdateCandidate updates some candidate's data
 	UpdateCandidate(ctx context.Context, candidateId, requesterId string, candidateData models.Candidate, requestedByAdmin bool) error
+	// GetAllElectionCandidates gets list of all candidates of an election
+	GetAllElectionCandidates(ctx context.Context, electionId, requesterId string, requestedByAdmin bool) ([]models.Candidate, error)
 }
 
 // candidate is a struct that holds methods for candidate in logic
 type candidate struct {
-	repo repository.CandidateRepo
+	repo          repository.CandidateRepo
+	electionLogic ElectionLogic
 }
 
 // NewCandidateLogic is constractor function for CandidateLogic
@@ -172,4 +175,31 @@ func (c candidate) UpdateCandidate(ctx context.Context, candidateId, requesterId
 	}
 
 	return nil
+}
+
+func (c candidate) GetAllElectionCandidates(ctx context.Context, electionId, requesterId string, requestedByAdmin bool) ([]models.Candidate, error) {
+	if c.repo == nil {
+		c.repo = repository.NewCandidateRepo()
+	}
+	if c.electionLogic == nil {
+		c.electionLogic = NewElectionLogic()
+	}
+
+	theElection, err := c.electionLogic.ReadElectionData(ctx, electionId)
+	if err != nil {
+		return nil, err
+	}
+
+	if !requestedByAdmin {
+		if theElection.CreatorId != requesterId {
+			return nil, errors.New(constants.AccessDenied)
+		}
+	}
+
+	candidates, err := c.repo.GetAllElectionCandidates(ctx, electionId)
+	if err != nil {
+		return nil, errors.New(constants.InternalServerError)
+	}
+
+	return candidates, nil
 }
