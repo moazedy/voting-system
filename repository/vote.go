@@ -27,10 +27,14 @@ type VoteRepo interface {
 	UpdateVoteData(ctx context.Context, newVoteData models.Vote) error
 	// GetCandidateVotes gets all of given candidate votes in system
 	GetCandidateVotes(ctx context.Context, candidateId, order string, offset, limit int) ([]models.Vote, error)
-	// GetCandidatePositiveVotes gets list of all positive votes of candidate
+	// GetCandidatePositiveVotes gets list of  positive votes of candidate
 	GetCandidatePositiveVotes(ctx context.Context, candidateId, order string, offset, limit int) ([]models.Vote, error)
-	// GetCandidateNegativeVotes gets list of all negative votes of candidate
+	// GetCandidateNegativeVotes gets list of  negative votes of candidate
 	GetCandidateNegativeVotes(ctx context.Context, candidateId, order string, offset, limit int) ([]models.Vote, error)
+	// GetAllCandidatePositiveVotes gets list of all positive votes of candidate
+	GetAllCandidatePositiveVotes(ctx context.Context, candidateId string) ([]models.Vote, error)
+	// GetAllCandidateNegativeVotes gets list of all negative votes of candidate
+	GetAllCandidateNegativeVotes(ctx context.Context, candidateId string) ([]models.Vote, error)
 	// VoteExists checks on some specific vote existance
 	VoteExists(ctx context.Context, voteId string) (*bool, error)
 }
@@ -264,4 +268,59 @@ func (v vote) VoteExists(ctx context.Context, voteId string) (*bool, error) {
 
 	return &exists, nil
 
+}
+
+func (v vote) GetAllCandidatePositiveVotes(ctx context.Context, candidateId string) ([]models.Vote, error) {
+
+	result, err := DBS.Couch.Query(couchbaseQueries.GetAllCandidatePositiveVotesQuery, &gocb.QueryOptions{
+		PositionalParameters: []interface{}{candidateId},
+	})
+	if err != nil {
+		log.Println("error in query execution, error :", err.Error())
+		return nil, err
+	}
+
+	var votes []models.Vote
+	for result.Next() {
+		var aVote models.Vote
+		err := result.Row(&aVote)
+		if err != nil {
+			if err == gocb.ErrNoResult {
+				return votes, nil
+			}
+			log.Println("error in reading vote item, error :", err.Error())
+			return nil, err
+		}
+
+		votes = append(votes, aVote)
+	}
+
+	return votes, nil
+}
+
+func (v vote) GetAllCandidateNegativeVotes(ctx context.Context, candidateId string) ([]models.Vote, error) {
+	result, err := DBS.Couch.Query(couchbaseQueries.GetAllCandidateNegativeVotesQuery, &gocb.QueryOptions{
+		PositionalParameters: []interface{}{candidateId},
+	})
+	if err != nil {
+		log.Println("error in query execution, error :", err.Error())
+		return nil, err
+	}
+
+	var votes []models.Vote
+	for result.Next() {
+		var aVote models.Vote
+		err := result.Row(&aVote)
+		if err != nil {
+			if err == gocb.ErrNoResult {
+				return votes, nil
+			}
+			log.Println("error in reading vote item, error :", err.Error())
+			return nil, err
+		}
+
+		votes = append(votes, aVote)
+	}
+
+	return votes, nil
 }
