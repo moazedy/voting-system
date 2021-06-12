@@ -164,3 +164,18 @@ type RelatedCategory struct {
 	Id  string `json:"id"`
 	Tag string `json:"tag"`
 }
+
+type ElectionResults struct {
+	Id       string                    `json:"id"`
+	Title    string                    `json:"title"`
+	Type     ElectionType              `json:"type"`
+	HasEnded bool                      `json:"has_ended"`
+	Results  []CandidateElectionResult `json:"results"`
+}
+
+type CandidateElectionResult struct {
+	CandidateId        string `json:"cnadidate_id"`
+	CandidateName      string `json:"candidate_name"`
+	PositiveVotesCount int    `json:"positive_votes_count"`
+	NegativeVotesCount int    `json:"negative_votes_count,omitempty"`
+}
