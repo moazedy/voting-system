@@ -29,9 +29,9 @@ type VoteLogic interface {
 	// GetCandidateVotes gets all of a specific candidate votes
 	GetCandidateVotes(ctx context.Context, candidateId, requesterId string, pagination helper.Pagination, requestedByAdmin bool) ([]models.Vote, error)
 	// GetCandidatePositiveVotes gets list of positive votes of some candidate
-	GetCandidatePositiveVotes(ctx context.Context, candidateId, requesterId string, pagination helper.Pagination, requestedByAdmin bool) ([]models.Vote, error)
+	GetCandidatePositiveVotes(ctx context.Context, candidateId, requesterId string, pagination *helper.Pagination, requestedByAdmin bool) ([]models.Vote, error)
 	// GetCandidateNegativeVotes gets list of negative votes of some candidate
-	GetCandidateNegativeVotes(ctx context.Context, candidateId, requesterId string, pagination helper.Pagination, requestedByAmdin bool) ([]models.Vote, error)
+	GetCandidateNegativeVotes(ctx context.Context, candidateId, requesterId string, pagination *helper.Pagination, requestedByAmdin bool) ([]models.Vote, error)
 }
 
 // vote is a struct that is way to access vote methods in logic layer
@@ -293,7 +293,8 @@ func (v vote) GetCandidateVotes(ctx context.Context, candidateId, requesterId st
 	return votes, nil
 }
 
-func (v vote) GetCandidatePositiveVotes(ctx context.Context, candidateId, requesterId string, pagination helper.Pagination, requestedByAdmin bool) ([]models.Vote, error) {
+func (v vote) GetCandidatePositiveVotes(ctx context.Context, candidateId, requesterId string,
+	pagination *helper.Pagination, requestedByAdmin bool) ([]models.Vote, error) {
 	// singlton design pattern ...
 	if v.repo == nil {
 		v.repo = repository.NewVoteRepo()
@@ -306,12 +307,21 @@ func (v vote) GetCandidatePositiveVotes(ctx context.Context, candidateId, reques
 		return nil, err
 	}
 
-	votes, err := v.repo.GetCandidatePositiveVotes(
+	var votes []models.Vote
+	if pagination == nil {
+		votes, err = v.repo.GetAllCandidatePositiveVotes(ctx, candidateId)
+		if err != nil {
+			return nil, errors.New(constants.InternalServerError)
+		}
+	}
+
+	Pagination := *pagination
+	votes, err = v.repo.GetCandidatePositiveVotes(
 		ctx,
 		candidateId,
-		pagination.GetOrder(),
-		pagination.GetOffset(),
-		pagination.GetLimit(),
+		Pagination.GetOrder(),
+		Pagination.GetOffset(),
+		Pagination.GetLimit(),
 	)
 	if err != nil {
 		return nil, errors.New(constants.InternalServerError)
@@ -320,7 +330,8 @@ func (v vote) GetCandidatePositiveVotes(ctx context.Context, candidateId, reques
 	return votes, nil
 }
 
-func (v vote) GetCandidateNegativeVotes(ctx context.Context, candidateId, requesterId string, pagination helper.Pagination, requestedByAdmin bool) ([]models.Vote, error) {
+func (v vote) GetCandidateNegativeVotes(ctx context.Context, candidateId, requesterId string,
+	pagination *helper.Pagination, requestedByAdmin bool) ([]models.Vote, error) {
 	// singlton design pattern ...
 	if v.repo == nil {
 		v.repo = repository.NewVoteRepo()
@@ -333,12 +344,21 @@ func (v vote) GetCandidateNegativeVotes(ctx context.Context, candidateId, reques
 		return nil, err
 	}
 
-	votes, err := v.repo.GetCandidateNegativeVotes(
+	var votes []models.Vote
+	if pagination == nil {
+		votes, err = v.repo.GetAllCandidateNegativeVotes(ctx, candidateId)
+		if err != nil {
+			return nil, errors.New(constants.InternalServerError)
+		}
+	}
+
+	Pagination := *pagination
+	votes, err = v.repo.GetCandidateNegativeVotes(
 		ctx,
 		candidateId,
-		pagination.GetOrder(),
-		pagination.GetOffset(),
-		pagination.GetLimit(),
+		Pagination.GetOrder(),
+		Pagination.GetOffset(),
+		Pagination.GetLimit(),
 	)
 	if err != nil {
 		return nil, errors.New(constants.InternalServerError)
