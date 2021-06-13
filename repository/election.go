@@ -34,6 +34,8 @@ type ElectionRepo interface {
 	GetCategoryRelatedElections(ctx context.Context, categoryId string) (*models.Elections, error)
 	// SaveElectionResults saves election results in db
 	SaveElectionResult(ctx context.Context, electionResult models.ElectionResults) (*models.Id, error)
+	// ReadElectionResult reads election results data from db
+	ReadElectionResult(ctx context.Context, electionId string) (*models.ElectionResults, error)
 }
 
 // election is a struct that represents election entity in repository layer and its the way we can access to repository methods of
@@ -292,4 +294,25 @@ func (e election) SaveElectionResult(ctx context.Context, electionResult models.
 		return nil, err
 	}
 	return &id, nil
+}
+
+func (e election) ReadElectionResult(ctx context.Context, electionId string) (*models.ElectionResults, error) {
+	result, err := DBS.Couch.Query(couchbaseQueries.ReadElectionResultQuery, &gocb.QueryOptions{
+		PositionalParameters: []interface{}{electionId},
+	})
+	if err != nil {
+		if err == gocb.ErrNoResult {
+			return nil, nil
+		}
+		log.Println("error in query execution, error: ", err.Error())
+		return nil, err
+	}
+
+	var data models.ElectionResults
+	err = result.One(&data)
+	if err != nil {
+		log.Println("error in reading election data result, error : ", err.Error())
+	}
+
+	return &data, nil
 }

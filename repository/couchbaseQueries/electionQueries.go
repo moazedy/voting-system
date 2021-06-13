@@ -45,6 +45,10 @@ const (
           cats.id = $1 `
 
 	SaveElectionResultsQuery = `
-INSERT INTO ` + constants.ElectionResultsBucket + ` (KEY, VALUE) VALUES ($1,$2) RETURNING meta().id 
+ INSERT INTO ` + constants.ElectionResultsBucket + ` (KEY, VALUE) VALUES ($1,$2) RETURNING meta().id 
 `
+
+	ReadElectionResultQuery = ` SELECT * FROM ` + constants.ElectionResultsBucket + ` WHERE 
+ (deleted = FALSE OR deleted IS MISSING OR deleted IS NULL) AND 
+ id = $1 `
 )
