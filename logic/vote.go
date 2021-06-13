@@ -75,7 +75,12 @@ func (v vote) SaveNewVote(ctx context.Context, voteData models.Vote, requesterId
 		return nil, err
 	}
 
-	// validation of voteData according to the election type
+	// check for election termination
+	if theElection.TerminationCheck() {
+		return nil, errors.New(constants.ElectionHasTerminated)
+	}
+
+	// validation of voteData according to the election type ,, TODO : the method is not being implemented yet
 	if err := voteData.VoteValidationAccordingToElectionType(theElection.Type); err != nil {
 		return nil, err
 	}
