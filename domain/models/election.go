@@ -180,3 +180,7 @@ type CandidateElectionResult struct {
 	PositiveVotesCount int    `json:"positive_votes_count"`
 	NegativeVotesCount int    `json:"negative_votes_count,omitempty"`
 }
+
+func (e *Election) TerminationCheck() bool {
+	return e.HasEnded || time.Now().After(e.EndTime)
+}
