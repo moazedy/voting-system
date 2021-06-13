@@ -31,6 +31,7 @@ const (
 	ContributorNameIsLongerThanExpected = "contributor_name_is_longer_than_expected"
 	ContributorAlredyExists             = "contributor_alredy_exists"
 	ContributorDoesNotExist             = "contributor_does_not_exist"
+	ElectionHasTerminated               = "election_has_terminated"
 )
 
 // error keies
