@@ -166,11 +166,12 @@ type RelatedCategory struct {
 }
 
 type ElectionResults struct {
-	Id       string                    `json:"id"`
-	Title    string                    `json:"title"`
-	Type     ElectionType              `json:"type"`
-	HasEnded bool                      `json:"has_ended"`
-	Results  []CandidateElectionResult `json:"results"`
+	Id         uuid.UUID                 `json:"id"`
+	ElectionId string                    `json:"election_id"`
+	Title      string                    `json:"title"`
+	Type       ElectionType              `json:"type"`
+	HasEnded   bool                      `json:"has_ended"`
+	Results    []CandidateElectionResult `json:"results"`
 }
 
 type CandidateElectionResult struct {
