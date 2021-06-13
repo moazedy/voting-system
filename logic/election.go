@@ -34,12 +34,16 @@ type ElectionLogic interface {
 	GetUserRelatedElections(ctx context.Context, userId, requesterId string, requestedByAdmin bool) (*models.Elections, error)
 	// GetCategoryRelatedElections gets list of elections that are related to given categoryId
 	GetCategoryRelatedElections(ctx context.Context, categoryId, requesterId string, requestedByAdmin bool) (*models.Elections, error)
+	// ConcurrentCalculationElectionResults gets results of an election and stores it in db
+	ConcurrentCalculationElectionResults(ctx context.Context, electionId, requesterId string, requestedByAdmin bool) (*models.ElectionResults, map[string]error)
 }
 
 // election struct, is holder of election metods in logic layer
 type election struct {
 	// repo is the way this layer of program can interface with repository layer
-	repo repository.ElectionRepo
+	repo           repository.ElectionRepo
+	candidateLogic CandidateLogic
+	voteLogic      VoteLogic
 }
 
 // NewElectionLogic is constractor function of ElectionLogic
@@ -275,4 +279,81 @@ func (e election) GetCategoryRelatedElections(ctx context.Context, categoryId, r
 	}
 
 	return elections, nil
+}
+
+func (e election) ConcurrentCalculationElectionResults(ctx context.Context, electionId, requesterId string,
+	requestedByAdmin bool) (*models.ElectionResults, map[string]error) {
+	// this part of code follows singlton design pattern
+	if e.repo == nil {
+		e.repo = repository.NewElectionRepo()
+	}
+	if e.candidateLogic == nil {
+		e.candidateLogic = NewCandidateLogic()
+	}
+	if e.voteLogic == nil {
+		e.voteLogic = NewVoteLogic()
+	}
+
+	// returning errors map
+	Errors := make(map[string]error)
+
+	theElection, err := e.ReadElectionData(ctx, electionId)
+	if err != nil {
+		Errors[constants.ReadingElectionError] = err
+		return nil, Errors
+	}
+
+	if !requestedByAdmin {
+		if theElection.CreatorId != requesterId {
+			Errors[constants.AccessError] = errors.New(constants.AccessDenied)
+			return nil, Errors
+		}
+	}
+
+	allCandidates, err := e.candidateLogic.GetAllElectionCandidates(ctx, electionId, requesterId, requestedByAdmin)
+	if err != nil {
+		Errors[constants.ReadingCandidatesError] = err
+		return nil, Errors
+	}
+
+	results := make([]models.CandidateElectionResult, len(allCandidates))
+	for k, v := range allCandidates {
+		results[k].CandidateId = v.Id.String()
+		results[k].CandidateName = v.Name
+
+		go func() {
+			positiveVotes, err := e.voteLogic.AgregateOfCandidatePositiveVotes(ctx, v.Id.String(), requesterId, requestedByAdmin)
+			if err != nil {
+				Errors[constants.PositiveVotes+v.Id.String()] = err
+				return
+			}
+			results[k].PositiveVotesCount = positiveVotes.Count
+		}()
+
+		go func() {
+			negativeVotes, err := e.voteLogic.AgregateOfCandidateNegativeVotes(ctx, v.Id.String(), requesterId, requestedByAdmin)
+			if err != nil {
+				Errors[constants.NegativeVotes+v.Id.String()] = err
+				return
+			}
+			results[k].PositiveVotesCount = negativeVotes.Count
+		}()
+	}
+
+	result := models.ElectionResults{
+		Id:         uuid.New(),
+		ElectionId: electionId,
+		Title:      theElection.Title,
+		Type:       theElection.Type,
+		HasEnded:   theElection.HasEnded,
+		Results:    results,
+	}
+
+	_, err = e.repo.SaveElectionResult(ctx, result)
+	if err != nil {
+		Errors[constants.SavingElectionResultsError] = err
+		return nil, Errors
+	}
+
+	return &result, Errors
 }
