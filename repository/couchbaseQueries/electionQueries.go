@@ -56,4 +56,9 @@ const (
    (deleted = FALSE OR deleted IS MISSING OR deleted IS NULL) AND 
     (has_ended = FALSE OR has_ended IS MISSING OR has_ended IS NULL) AND 
      start_time > $1 `
+
+	GetListOfStartedElectionsQuery = ` SELECT * FROM ` + constants.ElectionsBucket + ` WHERE 
+   (deleted = FALSE OR deleted IS MISSING OR deleted IS NULL) AND 
+    (has_ended = FALSE OR has_ended IS MISSING OR has_ended IS NULL) AND 
+     start_time < $1 `
 )
