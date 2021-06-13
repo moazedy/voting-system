@@ -38,6 +38,8 @@ type ElectionLogic interface {
 	ConcurrentCalculationElectionResults(ctx context.Context, electionId, requesterId string, requestedByAdmin bool) (*models.ElectionResults, map[string]error)
 	// CalculationElectionResults gets results of an election and stores it in db
 	CalculationElectionResults(ctx context.Context, electionId, requesterId string, requestedByAdmin bool) (*models.ElectionResults, error)
+	// ChangeElectionTerminationStatus changes state of termination in given election
+	ChangeElectionTerminationStatus(ctx context.Context, electionId, requesterId string, status, requestedByAdmin bool) error
 }
 
 // election struct, is holder of election metods in logic layer
@@ -422,4 +424,24 @@ func (e election) CalculationElectionResults(ctx context.Context, electionId, re
 	}
 
 	return &result, nil
+}
+
+func (e election) ChangeElectionTerminationStatus(ctx context.Context, electionId, requesterId string, status, requestedByAdmin bool) error {
+	theElection, err := e.ReadElectionData(ctx, electionId)
+	if err != nil {
+		return err
+	}
+
+	if !requestedByAdmin {
+		if requesterId != theElection.CreatorId {
+			return errors.New(constants.AccessDenied)
+		}
+	}
+
+	err = e.repo.ChangeElectionTerminationStatus(ctx, electionId, status)
+	if err != nil {
+		return errors.New(constants.InternalServerError)
+	}
+
+	return nil
 }
