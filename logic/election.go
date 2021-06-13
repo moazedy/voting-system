@@ -40,6 +40,8 @@ type ElectionLogic interface {
 	CalculationElectionResults(ctx context.Context, electionId, requesterId string, requestedByAdmin bool) (*models.ElectionResults, error)
 	// ChangeElectionTerminationStatus changes state of termination in given election
 	ChangeElectionTerminationStatus(ctx context.Context, electionId, requesterId string, status, requestedByAdmin bool) error
+	// GetListOfStartedElections gets list of not ended elections
+	GetListOfStartedElections(ctx context.Context, requestedByAdmin bool) ([]models.Election, error)
 }
 
 // election struct, is holder of election metods in logic layer
@@ -444,4 +446,20 @@ func (e election) ChangeElectionTerminationStatus(ctx context.Context, electionI
 	}
 
 	return nil
+}
+
+func (e election) GetListOfStartedElections(ctx context.Context, requestedByAdmin bool) ([]models.Election, error) {
+	if e.repo == nil {
+		e.repo = repository.NewElectionRepo()
+	}
+	if !requestedByAdmin {
+		return nil, errors.New(constants.AccessDenied)
+	}
+
+	elections, err := e.repo.GetListOfStartedElections(ctx, constants.DESCorder)
+	if err != nil {
+		return nil, errors.New(constants.InternalServerError)
+	}
+
+	return elections, nil
 }
