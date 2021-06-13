@@ -17,6 +17,8 @@ type ContributorLogic interface {
 	ReadContributor(ctx context.Context, contributorMetaId, requesterId string, requestedByAdmin bool) (*models.Contributor, error)
 	// ContributorExists checks for contributor existance in election
 	ContributorExists(ctx context.Context, contributorId, electionId string) (*bool, error)
+	// DeleteContributor deletes some contributors data
+	DeleteContributor(ctx context.Context, contributorId, requesterId string, requestedByAdmin bool) error
 }
 
 type contributor struct {
@@ -102,4 +104,17 @@ func (c contributor) ContributorExists(ctx context.Context, contributorId, elect
 	}
 
 	return exists, nil
+}
+
+func (c contributor) DeleteContributor(ctx context.Context, contributorId, requesterId string, requestedByAdmin bool) error {
+	if c.repo == nil {
+		c.repo = repository.NewContributorRepo()
+	}
+
+	_, err := c.ReadContributor(ctx, contributorId, requesterId, requestedByAdmin)
+	if err != nil {
+		return err
+	}
+
+	return c.repo.DeleteContributor(ctx, contributorId)
 }
