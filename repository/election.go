@@ -41,6 +41,8 @@ type ElectionRepo interface {
 	GetListOfNotStartedElections(ctx context.Context) ([]models.Election, error)
 	// GetListOfStartedElections gets list of elections being started
 	GetListOfStartedElections(ctx context.Context) ([]models.Election, error)
+	// GetListOfEndedElections gets list of elections has ended
+	GetListOfEndedElections(ctx context.Context) ([]models.Election, error)
 }
 
 // election is a struct that represents election entity in repository layer and its the way we can access to repository methods of
@@ -352,6 +354,34 @@ func (e election) GetListOfNotStartedElections(ctx context.Context) ([]models.El
 
 func (e election) GetListOfStartedElections(ctx context.Context) ([]models.Election, error) {
 	result, err := DBS.Couch.Query(couchbaseQueries.GetListOfStartedElectionsQuery, &gocb.QueryOptions{
+		PositionalParameters: []interface{}{time.Now()},
+	})
+	if err != nil {
+		log.Println("error in query execution, error :", err.Error())
+		return nil, err
+	}
+
+	var elections []models.Election
+	for result.Next() {
+		var el models.Election
+		err := result.Row(&el)
+		if err != nil {
+			if err == gocb.ErrNoResult {
+				return elections, nil
+			}
+
+			log.Println("error in reading election data item, error :", err.Error())
+			return nil, err
+		}
+
+		elections = append(elections, el)
+	}
+
+	return elections, nil
+}
+
+func (e election) GetListOfEndedElections(ctx context.Context) ([]models.Election, error) {
+	result, err := DBS.Couch.Query(couchbaseQueries.GetListOfEndedElectionsQuery, &gocb.QueryOptions{
 		PositionalParameters: []interface{}{time.Now()},
 	})
 	if err != nil {
