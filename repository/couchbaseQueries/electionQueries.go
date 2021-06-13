@@ -55,15 +55,16 @@ const (
 	GetListOfNotStartedElectionsQuery = ` SELECT * FROM ` + constants.ElectionsBucket + ` WHERE 
    (deleted = FALSE OR deleted IS MISSING OR deleted IS NULL) AND 
     (has_ended = FALSE OR has_ended IS MISSING OR has_ended IS NULL) AND 
-     start_time > $1 `
+     start_time > $1 ORDER BY start_time %s `
 
 	GetListOfStartedElectionsQuery = ` SELECT * FROM ` + constants.ElectionsBucket + ` WHERE 
    (deleted = FALSE OR deleted IS MISSING OR deleted IS NULL) AND 
     (has_ended = FALSE OR has_ended IS MISSING OR has_ended IS NULL) AND 
-     start_time < $1 `
+     start_time < $1 ORDER BY end_time %s `
 
 	GetListOfEndedElectionsQuery = ` SELECT * FROM ` + constants.ElectionsBucket + ` WHERE 
    (deleted = FALSE OR deleted IS MISSING OR deleted IS NULL) AND 
-    has_ended = TRUE
+    has_ended = TRUE 
+    ORDER BY creation_time %s 
       `
 )

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 	"voting-system/domain/models"
@@ -37,12 +38,12 @@ type ElectionRepo interface {
 	SaveElectionResult(ctx context.Context, electionResult models.ElectionResults) (*models.Id, error)
 	// ReadElectionResult reads election results data from db
 	ReadElectionResult(ctx context.Context, electionId string) (*models.ElectionResults, error)
-	// GetListOfNotStartedElections gets list of elections not started yet
-	GetListOfNotStartedElections(ctx context.Context) ([]models.Election, error)
-	// GetListOfStartedElections gets list of elections being started
-	GetListOfStartedElections(ctx context.Context) ([]models.Election, error)
+	// GetListOfNotStartedElections gets list of elections not started yet, ordered by start time
+	GetListOfNotStartedElections(ctx context.Context, order string) ([]models.Election, error)
+	// GetListOfStartedElections gets list of elections being started, ordered by end time
+	GetListOfStartedElections(ctx context.Context, order string) ([]models.Election, error)
 	// GetListOfEndedElections gets list of elections has ended
-	GetListOfEndedElections(ctx context.Context) ([]models.Election, error)
+	GetListOfEndedElections(ctx context.Context, order string) ([]models.Election, error)
 }
 
 // election is a struct that represents election entity in repository layer and its the way we can access to repository methods of
@@ -324,8 +325,9 @@ func (e election) ReadElectionResult(ctx context.Context, electionId string) (*m
 	return &data, nil
 }
 
-func (e election) GetListOfNotStartedElections(ctx context.Context) ([]models.Election, error) {
-	result, err := DBS.Couch.Query(couchbaseQueries.GetListOfNotStartedElectionsQuery, &gocb.QueryOptions{
+func (e election) GetListOfNotStartedElections(ctx context.Context, order string) ([]models.Election, error) {
+	query := fmt.Sprintf(couchbaseQueries.GetListOfNotStartedElectionsQuery, order)
+	result, err := DBS.Couch.Query(query, &gocb.QueryOptions{
 		PositionalParameters: []interface{}{time.Now()},
 	})
 	if err != nil {
@@ -352,8 +354,9 @@ func (e election) GetListOfNotStartedElections(ctx context.Context) ([]models.El
 	return elections, nil
 }
 
-func (e election) GetListOfStartedElections(ctx context.Context) ([]models.Election, error) {
-	result, err := DBS.Couch.Query(couchbaseQueries.GetListOfStartedElectionsQuery, &gocb.QueryOptions{
+func (e election) GetListOfStartedElections(ctx context.Context, order string) ([]models.Election, error) {
+	query := fmt.Sprintf(couchbaseQueries.GetListOfStartedElectionsQuery, order)
+	result, err := DBS.Couch.Query(query, &gocb.QueryOptions{
 		PositionalParameters: []interface{}{time.Now()},
 	})
 	if err != nil {
@@ -380,8 +383,9 @@ func (e election) GetListOfStartedElections(ctx context.Context) ([]models.Elect
 	return elections, nil
 }
 
-func (e election) GetListOfEndedElections(ctx context.Context) ([]models.Election, error) {
-	result, err := DBS.Couch.Query(couchbaseQueries.GetListOfEndedElectionsQuery, &gocb.QueryOptions{
+func (e election) GetListOfEndedElections(ctx context.Context, order string) ([]models.Election, error) {
+	query := fmt.Sprintf(couchbaseQueries.GetListOfEndedElectionsQuery, order)
+	result, err := DBS.Couch.Query(query, &gocb.QueryOptions{
 		PositionalParameters: []interface{}{time.Now()},
 	})
 	if err != nil {
