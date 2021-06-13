@@ -43,4 +43,8 @@ const (
           UNNEST e.related_categories AS cats
           WHERE (deleted= false OR deleted IS MISSING OR deleted IS NULL) AND
           cats.id = $1 `
+
+	SaveElectionResultsQuery = `
+INSERT INTO ` + constants.ElectionResultsBucket + ` (KEY, VALUE) VALUES ($1,$2) RETURNING meta().id 
+`
 )
