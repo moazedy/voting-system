@@ -44,6 +44,8 @@ type ElectionRepo interface {
 	GetListOfStartedElections(ctx context.Context, order string) ([]models.Election, error)
 	// GetListOfEndedElections gets list of elections has ended
 	GetListOfEndedElections(ctx context.Context, order string) ([]models.Election, error)
+	// ChangeElectionTerminationStatus changes termination status of the election
+	ChangeElectionTerminationStatus(ctx context.Context, electionId string, status bool) error
 }
 
 // election is a struct that represents election entity in repository layer and its the way we can access to repository methods of
@@ -410,4 +412,15 @@ func (e election) GetListOfEndedElections(ctx context.Context, order string) ([]
 	}
 
 	return elections, nil
+}
+
+func (e election) ChangeElectionTerminationStatus(ctx context.Context, electionId string, status bool) error {
+	_, err := DBS.Couch.Query(couchbaseQueries.ChangeElectionTerminationStatus, &gocb.QueryOptions{
+		PositionalParameters: []interface{}{status, electionId},
+	})
+	if err != nil {
+		log.Println("error in query execution, error :", err.Error())
+	}
+
+	return nil
 }

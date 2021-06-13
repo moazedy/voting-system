@@ -67,4 +67,7 @@ const (
     has_ended = TRUE 
     ORDER BY creation_time %s 
       `
+
+	ChangeElectionTerminationStatus = ` UPDATE ` + constants.ElectionsBucket + ` SET 
+       has_ended = $1 WHERE id= $2 `
 )
