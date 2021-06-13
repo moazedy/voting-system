@@ -49,6 +49,11 @@ const (
 `
 
 	ReadElectionResultQuery = ` SELECT * FROM ` + constants.ElectionResultsBucket + ` WHERE 
- (deleted = FALSE OR deleted IS MISSING OR deleted IS NULL) AND 
- id = $1 `
+  (deleted = FALSE OR deleted IS MISSING OR deleted IS NULL) AND 
+  id = $1 `
+
+	GetListOfNotStartedElectionsQuery = ` SELECT * FROM ` + constants.ElectionsBucket + ` WHERE 
+   (deleted = FALSE OR deleted IS MISSING OR deleted IS NULL) AND 
+    (has_ended = FALSE OR has_ended IS MISSING OR has_ended IS NULL) AND 
+     start_time > $1 `
 )

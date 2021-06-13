@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"log"
+	"time"
 	"voting-system/domain/models"
 	"voting-system/repository/couchbaseQueries"
 
@@ -36,6 +37,8 @@ type ElectionRepo interface {
 	SaveElectionResult(ctx context.Context, electionResult models.ElectionResults) (*models.Id, error)
 	// ReadElectionResult reads election results data from db
 	ReadElectionResult(ctx context.Context, electionId string) (*models.ElectionResults, error)
+	// GetListOfNotStartedElections gets list of elections not started yet
+	GetListOfNotStartedElections(ctx context.Context) ([]models.Election, error)
 }
 
 // election is a struct that represents election entity in repository layer and its the way we can access to repository methods of
@@ -315,4 +318,32 @@ func (e election) ReadElectionResult(ctx context.Context, electionId string) (*m
 	}
 
 	return &data, nil
+}
+
+func (e election) GetListOfNotStartedElections(ctx context.Context) ([]models.Election, error) {
+	result, err := DBS.Couch.Query(couchbaseQueries.GetListOfNotStartedElectionsQuery, &gocb.QueryOptions{
+		PositionalParameters: []interface{}{time.Now()},
+	})
+	if err != nil {
+		log.Println("error in query execution, error :", err.Error())
+		return nil, err
+	}
+
+	var elections []models.Election
+	for result.Next() {
+		var el models.Election
+		err := result.Row(&el)
+		if err != nil {
+			if err == gocb.ErrNoResult {
+				return elections, nil
+			}
+
+			log.Println("error in reading election data item, error :", err.Error())
+			return nil, err
+		}
+
+		elections = append(elections, el)
+	}
+
+	return elections, nil
 }
