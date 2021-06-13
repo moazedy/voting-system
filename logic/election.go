@@ -34,8 +34,10 @@ type ElectionLogic interface {
 	GetUserRelatedElections(ctx context.Context, userId, requesterId string, requestedByAdmin bool) (*models.Elections, error)
 	// GetCategoryRelatedElections gets list of elections that are related to given categoryId
 	GetCategoryRelatedElections(ctx context.Context, categoryId, requesterId string, requestedByAdmin bool) (*models.Elections, error)
-	// ConcurrentCalculationElectionResults gets results of an election and stores it in db
+	// ConcurrentCalculationElectionResults gets results of an election and stores it in db (using concurrency in process)
 	ConcurrentCalculationElectionResults(ctx context.Context, electionId, requesterId string, requestedByAdmin bool) (*models.ElectionResults, map[string]error)
+	// CalculationElectionResults gets results of an election and stores it in db
+	CalculationElectionResults(ctx context.Context, electionId, requesterId string, requestedByAdmin bool) (*models.ElectionResults, error)
 }
 
 // election struct, is holder of election metods in logic layer
@@ -356,4 +358,68 @@ func (e election) ConcurrentCalculationElectionResults(ctx context.Context, elec
 	}
 
 	return &result, Errors
+}
+
+func (e election) CalculationElectionResults(ctx context.Context, electionId, requesterId string, requestedByAdmin bool) (*models.ElectionResults, error) {
+	// this part of code follows singlton design pattern
+	if e.repo == nil {
+		e.repo = repository.NewElectionRepo()
+	}
+	if e.candidateLogic == nil {
+		e.candidateLogic = NewCandidateLogic()
+	}
+	if e.voteLogic == nil {
+		e.voteLogic = NewVoteLogic()
+	}
+
+	theElection, err := e.ReadElectionData(ctx, electionId)
+	if err != nil {
+		return nil, err
+	}
+
+	if !requestedByAdmin {
+		if theElection.CreatorId != requesterId {
+			return nil, errors.New(constants.AccessDenied)
+		}
+	}
+
+	allCandidates, err := e.candidateLogic.GetAllElectionCandidates(ctx, electionId, requesterId, requestedByAdmin)
+	if err != nil {
+		return nil, err
+	}
+
+	results := make([]models.CandidateElectionResult, len(allCandidates))
+	for k, v := range allCandidates {
+		results[k].CandidateId = v.Id.String()
+		results[k].CandidateName = v.Name
+
+		positiveVotes, err := e.voteLogic.AgregateOfCandidatePositiveVotes(ctx, v.Id.String(), requesterId, requestedByAdmin)
+		if err != nil {
+			return nil, err
+		}
+
+		negativeVotes, err := e.voteLogic.AgregateOfCandidateNegativeVotes(ctx, v.Id.String(), requesterId, requestedByAdmin)
+		if err != nil {
+			return nil, err
+		}
+
+		results[k].PositiveVotesCount = positiveVotes.Count
+		results[k].NegativeVotesCount = negativeVotes.Count
+	}
+
+	result := models.ElectionResults{
+		Id:         uuid.New(),
+		ElectionId: electionId,
+		Title:      theElection.Title,
+		Type:       theElection.Type,
+		HasEnded:   theElection.HasEnded,
+		Results:    results,
+	}
+
+	_, err = e.repo.SaveElectionResult(ctx, result)
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
 }
