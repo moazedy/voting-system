@@ -35,7 +35,8 @@ const (
 
 // error keies
 const (
-	ReadingElectionError   = "reading election error"
-	AccessError            = "access error"
-	ReadingCandidatesError = "reading candidates error"
+	ReadingElectionError       = "reading election error"
+	AccessError                = "access error"
+	ReadingCandidatesError     = "reading candidates error"
+	SavingElectionResultsError = "saving election results error"
 )
