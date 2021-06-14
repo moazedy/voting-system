@@ -54,7 +54,7 @@ func (e election) CreateNewElection(c *gin.Context) {
 	}
 
 	// returning created election's id to http client
-	c.JSON(http.StatusOK, id)
+	c.JSON(http.StatusCreated, id)
 }
 
 func (e election) ReadElectionData(c *gin.Context) {
