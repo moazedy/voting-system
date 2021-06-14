@@ -27,3 +27,7 @@ const (
 	PositiveVotes = " positive votes "
 	NegativeVotes = " negative votes "
 )
+
+const (
+	ElectionManagerWorkerWorkPeriod = 5 // in seconds
+)
