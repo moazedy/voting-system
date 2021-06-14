@@ -16,6 +16,8 @@ type CandidateController interface {
 	ReadCandidateData(ctx *gin.Context)
 	// DeleteCandidate deletes given candidate id
 	DeleteCandidate(ctx *gin.Context)
+	// UpdateCandidate updates data of some specific candidate
+	UpdateCandidate(ctx *gin.Context)
 }
 
 type candidate struct {
@@ -87,6 +89,39 @@ func (c candidate) DeleteCandidate(ctx *gin.Context) {
 	}
 
 	err = c.Logic.DeleteCandidate(ctx, candidateId, requesterId, false)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusNoContent, nil)
+}
+
+func (c candidate) UpdateCandidate(ctx *gin.Context) {
+	// TODO : requester id should be extracted from user claims
+	requesterId := ""
+	candidateId := ctx.Param("candidate_id")
+
+	var newCandidateData models.Candidate
+	err := ctx.BindJSON(&newCandidateData)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": constants.InvalidCandidateData,
+		})
+		return
+	}
+
+	err = logic.IdValidation(candidateId)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	err = c.Logic.UpdateCandidate(ctx, candidateId, requesterId, newCandidateData, false)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
