@@ -33,6 +33,7 @@ const (
 	ContributorDoesNotExist             = "contributor_does_not_exist"
 	ElectionHasTerminated               = "election_has_terminated"
 	InvalidElectionData                 = "invalid_election_data"
+	InvalidCandidateData                = "invalid_candidate_data"
 )
 
 // error keies
