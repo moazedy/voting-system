@@ -15,6 +15,8 @@ type ElectionController interface {
 	CreateNewElection(c *gin.Context)
 	// ReadElectionData reads an election data using received id from client
 	ReadElectionData(c *gin.Context)
+	// DeleteElection deletes given election
+	DeleteElection(c *gin.Context)
 }
 
 // election is a struct ot hold controller methods for election entity in controller
@@ -61,6 +63,7 @@ func (e election) ReadElectionData(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
+		return
 	}
 
 	// passing received id to logic
@@ -74,4 +77,30 @@ func (e election) ReadElectionData(c *gin.Context) {
 
 	// returning results to http client
 	c.JSON(http.StatusOK, electionData)
+}
+
+func (e election) DeleteElection(c *gin.Context) {
+	// extracting requester id
+	requesterId := "" // TODO : need to be extracted from user claimes
+	electionId := c.Param("election_id")
+
+	// validating receieved election id
+	err := logic.IdValidation(electionId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	// passing received id to logic for deleting process
+	err = e.Logic.DeleteElection(c, electionId, requesterId, false)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusNoContent, nil)
 }
