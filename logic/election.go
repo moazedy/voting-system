@@ -324,22 +324,23 @@ func (e election) ConcurrentCalculationElectionResults(ctx context.Context, elec
 
 	results := make([]models.CandidateElectionResult, len(allCandidates))
 	for k, v := range allCandidates {
-		results[k].CandidateId = v.Id.String()
+		results[k].CandidateId = v.CandidateId
+		results[k].CandidateMetaId = v.MetaId.String()
 		results[k].CandidateName = v.Name
 
 		go func() {
-			positiveVotes, err := e.voteLogic.AgregateOfCandidatePositiveVotes(ctx, v.Id.String(), requesterId, requestedByAdmin)
+			positiveVotes, err := e.voteLogic.AgregateOfCandidatePositiveVotes(ctx, v.MetaId.String(), requesterId, requestedByAdmin)
 			if err != nil {
-				Errors[constants.PositiveVotes+v.Id.String()] = err
+				Errors[constants.PositiveVotes+v.MetaId.String()] = err
 				return
 			}
 			results[k].PositiveVotesCount = positiveVotes.Count
 		}()
 
 		go func() {
-			negativeVotes, err := e.voteLogic.AgregateOfCandidateNegativeVotes(ctx, v.Id.String(), requesterId, requestedByAdmin)
+			negativeVotes, err := e.voteLogic.AgregateOfCandidateNegativeVotes(ctx, v.MetaId.String(), requesterId, requestedByAdmin)
 			if err != nil {
-				Errors[constants.NegativeVotes+v.Id.String()] = err
+				Errors[constants.NegativeVotes+v.MetaId.String()] = err
 				return
 			}
 			results[k].PositiveVotesCount = negativeVotes.Count
@@ -394,15 +395,16 @@ func (e election) CalculationElectionResults(ctx context.Context, electionId, re
 
 	results := make([]models.CandidateElectionResult, len(allCandidates))
 	for k, v := range allCandidates {
-		results[k].CandidateId = v.Id.String()
+		results[k].CandidateId = v.CandidateId
+		results[k].CandidateMetaId = v.MetaId.String()
 		results[k].CandidateName = v.Name
 
-		positiveVotes, err := e.voteLogic.AgregateOfCandidatePositiveVotes(ctx, v.Id.String(), requesterId, requestedByAdmin)
+		positiveVotes, err := e.voteLogic.AgregateOfCandidatePositiveVotes(ctx, v.MetaId.String(), requesterId, requestedByAdmin)
 		if err != nil {
 			return nil, err
 		}
 
-		negativeVotes, err := e.voteLogic.AgregateOfCandidateNegativeVotes(ctx, v.Id.String(), requesterId, requestedByAdmin)
+		negativeVotes, err := e.voteLogic.AgregateOfCandidateNegativeVotes(ctx, v.MetaId.String(), requesterId, requestedByAdmin)
 		if err != nil {
 			return nil, err
 		}
