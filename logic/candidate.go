@@ -15,7 +15,7 @@ import (
 // CandidateLogic is interface for candidate entity in logic layer
 type CandidateLogic interface {
 	// CreateNewCandidate creates new candidate
-	CreateNewCandidate(ctx context.Context, candidateData models.Candidate) (*models.Id, error)
+	CreateNewCandidate(ctx context.Context, requesterId string, candidateData models.Candidate) (*models.Id, error)
 	// ReadCandidateData reads data of givne candidate
 	ReadCandidateData(ctx context.Context, candidateId, requesterId string, requestedByAdmin bool) (*models.Candidate, error)
 	// DeleteCandidate deletes given candidateId
@@ -42,7 +42,7 @@ func NewCandidateLogic() CandidateLogic {
 
 }
 
-func (c *candidate) CreateNewCandidate(ctx context.Context, candidateData models.Candidate) (*models.Id, error) {
+func (c *candidate) CreateNewCandidate(ctx context.Context, requesterId string, candidateData models.Candidate) (*models.Id, error) {
 	if c.repo == nil {
 		c.repo = repository.NewCandidateRepo()
 	}
@@ -51,9 +51,10 @@ func (c *candidate) CreateNewCandidate(ctx context.Context, candidateData models
 		return nil, err
 	}
 
-	candidateData.Id = uuid.New()
+	candidateData.CandidateId = requesterId
+	candidateData.MetaId = uuid.New()
 	candidateData.Created_At = time.Now()
-	electionExists, err := repository.NewElectionRepo().ElectionExists(ctx, candidateData.Id.String())
+	electionExists, err := repository.NewElectionRepo().ElectionExists(ctx, candidateData.MetaId.String())
 	if err != nil {
 		return nil, errors.New(constants.InternalServerError)
 	}
@@ -84,7 +85,7 @@ func (c *candidate) ReadCandidateData(ctx context.Context, candidateId, requeste
 	}
 
 	if !requestedByAdmin {
-		if theCandidate.Id.String() != requesterId {
+		if theCandidate.CandidateId != requesterId {
 			return nil, errors.New(constants.AccessDenied)
 		}
 	}
@@ -167,7 +168,7 @@ func (c candidate) UpdateCandidate(ctx context.Context, candidateId, requesterId
 	if err != nil {
 		return errors.New(constants.InvalidId)
 	}
-	candidateData.Id = uid
+	candidateData.MetaId = uid
 
 	err = c.repo.UpdateCandidate(ctx, candidateData)
 	if err != nil {
