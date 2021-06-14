@@ -32,6 +32,7 @@ const (
 	ContributorAlredyExists             = "contributor_alredy_exists"
 	ContributorDoesNotExist             = "contributor_does_not_exist"
 	ElectionHasTerminated               = "election_has_terminated"
+	InvalidElectionData                 = "invalid_election_data"
 )
 
 // error keies
