@@ -41,7 +41,7 @@ func NewCandidateRepo() CandidateRepo {
 
 func (c *candidate) CreateCandidate(ctx context.Context, NewCandidate models.Candidate) (*models.Id, error) {
 	result, err := DBS.Couch.Query(couchbaseQueries.SaveNewCandidateQuery, &gocb.QueryOptions{
-		PositionalParameters: []interface{}{NewCandidate.Id, NewCandidate},
+		PositionalParameters: []interface{}{NewCandidate.MetaId, NewCandidate},
 	})
 	if err != nil {
 		log.Println(" error in saving new candidate, error :", err.Error())
@@ -124,7 +124,7 @@ func (c *candidate) UpdateCandidate(ctx context.Context, candidateData models.Ca
 			candidateData.Type,
 			candidateData.Descriptions,
 			candidateData.ElectionId,
-			candidateData.Id,
+			candidateData.MetaId,
 		},
 	})
 	if err != nil {
