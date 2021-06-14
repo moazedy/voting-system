@@ -9,7 +9,8 @@ import (
 )
 
 type Candidate struct {
-	Id           uuid.UUID     `json:"id"`
+	MetaId       uuid.UUID     `json:"meta_id,omitempty"`
+	CandidateId  string        `json:"candidate_id"`
 	Name         string        `json:"name"`
 	Type         CandidateType `json:"type"`
 	Descriptions []string      `json:"descriptions"`

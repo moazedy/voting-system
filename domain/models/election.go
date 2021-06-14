@@ -175,7 +175,8 @@ type ElectionResults struct {
 }
 
 type CandidateElectionResult struct {
-	CandidateId        string `json:"cnadidate_id"`
+	CandidateMetaId    string `json:"cnadidate_mata_id"`
+	CandidateId        string `json:"candidate_id"`
 	CandidateName      string `json:"candidate_name"`
 	PositiveVotesCount int    `json:"positive_votes_count"`
 	NegativeVotesCount int    `json:"negative_votes_count,omitempty"`
