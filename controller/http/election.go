@@ -13,6 +13,8 @@ import (
 type ElectionController interface {
 	// CreateElection gets election data from client and passes it to logic layer for creating a new election
 	CreateNewElection(c *gin.Context)
+	// ReadElectionData reads an election data using received id from client
+	ReadElectionData(c *gin.Context)
 }
 
 // election is a struct ot hold controller methods for election entity in controller
@@ -49,4 +51,27 @@ func (e election) CreateNewElection(c *gin.Context) {
 
 	// returning created election's id to http client
 	c.JSON(http.StatusOK, id)
+}
+
+func (e election) ReadElectionData(c *gin.Context) {
+	electionId := c.Param("election_id")
+	// id validation
+	err := logic.IdValidation(electionId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+	}
+
+	// passing received id to logic
+	electionData, err := e.Logic.ReadElectionData(c, electionId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	// returning results to http client
+	c.JSON(http.StatusOK, electionData)
 }
