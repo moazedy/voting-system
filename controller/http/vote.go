@@ -14,6 +14,8 @@ type VoteController interface {
 	SaveNewVote(c *gin.Context)
 	// ReadVoteData reads data of a specific vote and returns it to requester
 	ReadVoteData(c *gin.Context)
+	// DeleteVote deletes data of a specific vote
+	DeleteVote(c *gin.Context)
 }
 
 type vote struct {
@@ -67,4 +69,27 @@ func (v vote) ReadVoteData(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, voteData)
+}
+
+func (v vote) DeleteVote(c *gin.Context) {
+	// requesterId should be extracted from access token
+	requesterId := ""
+	voteId := c.Param("vote_id")
+	err := logic.IdValidation(voteId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	err = v.Logic.DeleteVote(c, voteId, requesterId, false)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusNoContent, nil)
 }
