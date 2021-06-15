@@ -20,6 +20,8 @@ type VoteController interface {
 	UpdateVoteData(c *gin.Context)
 	// GetCandidatePositiveVotesCount gets number of positive votes of a candidate
 	GetCandidatePositiveVotesCount(c *gin.Context)
+	// GetCandidateNegativeVotesCount gets number of negative votes of a candidate
+	GetCandidateNegativeVotesCount(c *gin.Context)
 }
 
 type vote struct {
@@ -142,6 +144,29 @@ func (v vote) GetCandidatePositiveVotesCount(c *gin.Context) {
 	}
 
 	votes, err := v.Logic.AgregateOfCandidatePositiveVotes(c, candidateId, requesterId, false)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, votes)
+}
+
+func (v vote) GetCandidateNegativeVotesCount(c *gin.Context) {
+	// requesterId should be extracted from access token
+	requesterId := ""
+	candidateId := c.Param("candidate_id")
+	err := logic.IdValidation(candidateId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	votes, err := v.Logic.AgregateOfCandidateNegativeVotes(c, candidateId, requesterId, false)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
