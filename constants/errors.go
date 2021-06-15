@@ -1,5 +1,7 @@
 package constants
 
+import "net/http"
+
 const (
 	TitleCanNotBeEmpty                  = "title_can_not_be_empty"
 	TitleLengthIsMoreThanMaximom        = "title_length_is_more_than_maximom"
@@ -35,6 +37,13 @@ const (
 	InvalidElectionData                 = "invalid_election_data"
 	InvalidCandidateData                = "invalid_candidate_data"
 )
+
+// http error codes
+var HttpStatus = map[string]int{
+	TitleCanNotBeEmpty:            http.StatusBadRequest,
+	TitleLengthIsMoreThanMaximom:  http.StatusBadRequest,
+	EndTimeCanNotBeBeforStartTime: http.StatusBadRequest,
+}
 
 // error keies
 const (

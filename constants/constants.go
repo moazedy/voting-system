@@ -10,9 +10,15 @@ const (
 )
 
 const (
-	MaximomTitleLength         = 50
-	MaximomCandidatesCount     = 10
-	MaximomCandidateNameLength = 50
+	MaximomTitleLength         int = 50
+	MaximomCandidatesCount     int = 10
+	MaximomCandidateNameLength int = 50
+)
+
+const (
+	PaginationDefaultPerPage int    = 25
+	PaginationDefaultOrder   string = "DESC"
+	PaginationMaxPerPage     int    = 100
 )
 
 const (
