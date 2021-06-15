@@ -16,6 +16,8 @@ type VoteController interface {
 	ReadVoteData(c *gin.Context)
 	// DeleteVote deletes data of a specific vote
 	DeleteVote(c *gin.Context)
+	// UpdateVoteData updates a specific votes data
+	UpdateVoteData(c *gin.Context)
 }
 
 type vote struct {
@@ -84,6 +86,37 @@ func (v vote) DeleteVote(c *gin.Context) {
 	}
 
 	err = v.Logic.DeleteVote(c, voteId, requesterId, false)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusNoContent, nil)
+}
+
+func (v vote) UpdateVoteData(c *gin.Context) {
+	// requesterId should be extracted from access token
+	requesterId := ""
+	voteId := c.Param("vote_id")
+	err := logic.IdValidation(voteId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	var voteData models.Vote
+	err = c.BindJSON(&voteData)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": constants.InvalidVoteData,
+		})
+		return
+	}
+
+	err = v.Logic.UpdateVoteData(c, voteId, requesterId, voteData, false)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
