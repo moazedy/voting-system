@@ -278,7 +278,7 @@ func (v vote) GetCandidateVotes(ctx context.Context, candidateId, requesterId st
 	}
 
 	// calling ReadingCandidateData on some candidateId, without considering returning data, checks on all validations and
-	// access levels
+  // access levels TODO : adding conditional statements accordign to election type in reading votes data
 	_, err := v.candidateLogic.ReadCandidateData(ctx, candidateId, requesterId, requestedByAdmin)
 	if err != nil {
 		return nil, err
