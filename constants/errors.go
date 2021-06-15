@@ -36,6 +36,7 @@ const (
 	ElectionHasTerminated               = "election_has_terminated"
 	InvalidElectionData                 = "invalid_election_data"
 	InvalidCandidateData                = "invalid_candidate_data"
+	InvalidVoteData                     = "invalid_vote_data"
 )
 
 // http error codes
@@ -43,6 +44,7 @@ var HttpStatus = map[string]int{
 	TitleCanNotBeEmpty:            http.StatusBadRequest,
 	TitleLengthIsMoreThanMaximom:  http.StatusBadRequest,
 	EndTimeCanNotBeBeforStartTime: http.StatusBadRequest,
+	InvalidVoteData:               http.StatusBadRequest,
 }
 
 // error keies
