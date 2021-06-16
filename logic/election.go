@@ -349,8 +349,13 @@ func (e election) ConcurrentCalculationElectionResults(ctx context.Context, elec
 		}()
 	}
 
+	resultExists, err := e.CheckElectionExistance(ctx, electionId)
+	if err != nil {
+		Errors[constants.ElectionExistanceError] = err
+		return nil, Errors
+	}
+
 	result := models.ElectionResults{
-		Id:         uuid.New(),
 		ElectionId: electionId,
 		Title:      theElection.Title,
 		Type:       theElection.Type,
@@ -358,13 +363,31 @@ func (e election) ConcurrentCalculationElectionResults(ctx context.Context, elec
 		Results:    results,
 	}
 
-	_, err = e.repo.SaveElectionResult(ctx, result)
+	// saving new election result if not exists in db
+	if !*resultExists {
+		result.Id = uuid.New()
+		_, err = e.repo.SaveElectionResult(ctx, result)
+		if err != nil {
+
+			return nil, Errors
+		}
+	}
+
+	// updating pervious result if exists
+	id, err := e.repo.UpdateElectionResult(ctx, result)
 	if err != nil {
-		Errors[constants.SavingElectionResultsError] = err
+		Errors[constants.UpdateElectionResultError] = err
 		return nil, Errors
 	}
 
-	return &result, Errors
+	uId, err := uuid.Parse(id.Id)
+	if err != nil {
+		Errors[constants.InvalidElectionId] = err
+		return nil, Errors
+	}
+
+	result.Id = uId
+	return &result, nil
 }
 
 func (e election) CalculationElectionResults(ctx context.Context, electionId, requesterId string, requestedByAdmin bool) (*models.ElectionResults, error) {
@@ -414,9 +437,12 @@ func (e election) CalculationElectionResults(ctx context.Context, electionId, re
 		results[k].PositiveVotesCount = positiveVotes.Count
 		results[k].NegativeVotesCount = negativeVotes.Count
 	}
+	resultExists, err := e.CheckElectionExistance(ctx, electionId)
+	if err != nil {
+		return nil, err
+	}
 
 	result := models.ElectionResults{
-		Id:         uuid.New(),
 		ElectionId: electionId,
 		Title:      theElection.Title,
 		Type:       theElection.Type,
@@ -424,11 +450,25 @@ func (e election) CalculationElectionResults(ctx context.Context, electionId, re
 		Results:    results,
 	}
 
-	_, err = e.repo.SaveElectionResult(ctx, result)
-	if err != nil {
-		return nil, err
+	if !*resultExists {
+		result.Id = uuid.New()
+		_, err = e.repo.SaveElectionResult(ctx, result)
+		if err != nil {
+			return nil, err
+		}
 	}
 
+	id, err := e.repo.UpdateElectionResult(ctx, result)
+	if err != nil {
+		return nil, errors.New(constants.InternalServerError)
+	}
+
+	uId, err := uuid.Parse(id.Id)
+	if err != nil {
+		return nil, errors.New(constants.InvalidElectionId)
+	}
+
+	result.Id = uId
 	return &result, nil
 }
 
