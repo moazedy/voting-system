@@ -50,7 +50,7 @@ const (
 
 	ReadElectionResultQuery = ` SELECT * FROM ` + constants.ElectionResultsBucket + ` WHERE 
   (deleted = FALSE OR deleted IS MISSING OR deleted IS NULL) AND 
-  id = $1 `
+  election_id = $1 `
 
 	GetListOfNotStartedElectionsQuery = ` SELECT * FROM ` + constants.ElectionsBucket + ` WHERE 
    (deleted = FALSE OR deleted IS MISSING OR deleted IS NULL) AND 
@@ -70,4 +70,8 @@ const (
 
 	ChangeElectionTerminationStatus = ` UPDATE ` + constants.ElectionsBucket + ` SET 
        has_ended = $1 WHERE id= $2 `
+
+	ElectionResultExistsQuery = ` SELECT count(*) FROM ` + constants.ElectionResultsBucket + ` WHERE 
+        (deleted = FALSE OR deleted IS MISSING OR deleted IS NULL) AND 
+         election_id= $1 `
 )

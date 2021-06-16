@@ -46,6 +46,8 @@ type ElectionRepo interface {
 	GetListOfEndedElections(ctx context.Context, order string) ([]models.Election, error)
 	// ChangeElectionTerminationStatus changes termination status of the election
 	ChangeElectionTerminationStatus(ctx context.Context, electionId string, status bool) error
+	// ElectionResultExists checks for existatnce of a specific election results in db
+	ElectionResultExists(ctx context.Context, electionId string) (*bool, error)
 }
 
 // election is a struct that represents election entity in repository layer and its the way we can access to repository methods of
@@ -423,4 +425,31 @@ func (e election) ChangeElectionTerminationStatus(ctx context.Context, electionI
 	}
 
 	return nil
+}
+
+func (e election) ElectionResultExists(ctx context.Context, electionId string) (*bool, error) {
+	qResult, err := DBS.Couch.Query(couchbaseQueries.ElectionResultExistsQuery, &gocb.QueryOptions{
+		PositionalParameters: []interface{}{electionId},
+	})
+	if err != nil {
+		log.Println("error in query execution, error: ", err.Error())
+		return nil, err
+	}
+	var exists bool
+	var count models.Count
+	err = qResult.One(&count)
+	if err != nil {
+		if err == gocb.ErrNoResult {
+			return &exists, nil
+		}
+
+		log.Println("error in reading election result count, error :", err.Error())
+		return nil, err
+	}
+
+	if count.Count > 0 {
+		exists = true
+	}
+
+	return &exists, nil
 }
