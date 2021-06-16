@@ -74,4 +74,7 @@ const (
 	ElectionResultExistsQuery = ` SELECT count(*) FROM ` + constants.ElectionResultsBucket + ` WHERE 
         (deleted = FALSE OR deleted IS MISSING OR deleted IS NULL) AND 
          election_id= $1 `
+
+	UpdateElectionResultQuery = ` UPDATE ` + constants.ElectionResultsBucket + ` SET 
+         results= $1 WHERE election_id= $2 `
 )

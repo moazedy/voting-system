@@ -48,6 +48,8 @@ type ElectionRepo interface {
 	ChangeElectionTerminationStatus(ctx context.Context, electionId string, status bool) error
 	// ElectionResultExists checks for existatnce of a specific election results in db
 	ElectionResultExists(ctx context.Context, electionId string) (*bool, error)
+	// UpdateElecitonResult updates election results
+	UpdateElectionResult(ctx context.Context, electionResult models.ElectionResults) (*models.Id, error)
 }
 
 // election is a struct that represents election entity in repository layer and its the way we can access to repository methods of
@@ -452,4 +454,22 @@ func (e election) ElectionResultExists(ctx context.Context, electionId string) (
 	}
 
 	return &exists, nil
+}
+
+func (e election) UpdateElectionResult(ctx context.Context, electionData models.ElectionResults) (*models.Id, error) {
+	result, err := DBS.Couch.Query(couchbaseQueries.UpdateElectionResultQuery, &gocb.QueryOptions{
+		PositionalParameters: []interface{}{electionData.Results, electionData.ElectionId},
+	})
+	if err != nil {
+		log.Println("error in query execution, error: ", err.Error())
+		return nil, err
+	}
+
+	var id models.Id
+	err = result.One(&id)
+	if err != nil {
+		log.Println("error in readin id, error: ", err.Error())
+		return nil, err
+	}
+	return &id, nil
 }
