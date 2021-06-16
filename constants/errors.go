@@ -53,4 +53,6 @@ const (
 	AccessError                = "access error"
 	ReadingCandidatesError     = "reading candidates error"
 	SavingElectionResultsError = "saving election results error"
+	ElectionExistanceError     = "election existance error"
+	UpdateElectionResultError  = "update election result error"
 )
